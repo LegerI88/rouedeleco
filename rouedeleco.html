@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>La Roue de l'Éco-Gestion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Archivo:wdth,wght@75..125,400..900&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* Plateau TV : la roue à gauche, le panneau de lettres à droite, les équipes en bas. */
+:root{
+  color-scheme: dark;
+  --stage:#0c1524; --stage-2:#13213a; --stage-3:#1c3052; --line:#2b4468;
+  --ink:#eef2f8; --muted:#9db0c9;
+  --gold:#ffc83d; --gold-deep:#c98d00;
+  --tile:#168a69; --tile-dark:#0d5b45; --tile-face:#f6f2e5; --tile-ink:#10203a; --lit:#5fe3ff;
+  --ok:#3ddc97; --bad:#ff5d62; --paper:#fffcf3; --paper-ink:#1d2433;
+  --font-display:"Bowlby One SC","Arial Black",Impact,sans-serif;
+  --font-ui:"Archivo","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-ticket:"Courier Prime","Courier New",Courier,monospace;
+}
+html,body{height:100%}
+body{
+  background: radial-gradient(120% 80% at 50% -10%, var(--stage-3) 0%, var(--stage-2) 38%, var(--stage) 75%) fixed, var(--stage);
+  color:var(--ink); font-family:var(--font-ui); font-size:16px; line-height:1.45;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));
+}
+button{font:inherit; color:inherit; cursor:pointer}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:3px solid var(--gold); outline-offset:3px}
+#app{max-width:1500px; margin-inline:auto; min-height:100%}
+.screen{min-height:100%}
+
+/* ---------- SETUP ---------- */
+#setup{display:flex; flex-direction:column; gap:28px; padding-block:28px 40px}
+.hero{display:grid; grid-template-columns:minmax(180px,300px) 1fr; gap:36px; align-items:center}
+.hero-wheel{position:relative; width:100%; max-width:300px; aspect-ratio:1}
+.hero-wheel canvas{width:100%; height:100%; display:block}
+.eyebrow{font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:.78rem; color:var(--gold); margin:0 0 10px}
+h1{font-family:var(--font-display); font-weight:400; font-size:clamp(2.4rem,6vw,4.6rem); line-height:.95; margin:0; text-wrap:balance; letter-spacing:.01em;
+  color:var(--ink); text-shadow:0 3px 0 var(--gold-deep), 0 8px 26px rgba(255,200,61,.25)}
+h1 em{font-style:normal; color:var(--gold); text-shadow:0 3px 0 #7a4f00}
+.lede{max-width:56ch; color:var(--muted); font-size:1.08rem; margin:16px 0 0}
+.author{margin:14px 0 0; font-weight:800; letter-spacing:.06em; color:var(--ink)}
+.author span{color:var(--gold)}
+.author-s{font-size:.82rem; font-weight:700; color:var(--muted)}
+.final-author{margin:16px 0 0; color:var(--muted); font-weight:700; font-size:.9rem}
+
+.setup-grid{display:grid; grid-template-columns:1.25fr 1.25fr 1fr; gap:18px}
+.panel{border:1px solid var(--line); background:linear-gradient(180deg, rgba(28,48,82,.65), rgba(19,33,58,.65)); border-radius:14px; padding:18px; margin:0; min-width:0}
+.panel legend{font-family:var(--font-display); font-size:1.05rem; padding:0 8px; color:var(--gold)}
+.pools{display:flex; flex-direction:column; gap:10px}
+.pool{display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; padding:12px 14px; border-radius:10px; border:2px solid var(--line); background:var(--stage); cursor:pointer; transition:border-color .15s, background .15s}
+.pool:has(input:checked){border-color:var(--gold); background:#1a2a14; background:color-mix(in srgb, var(--gold) 12%, var(--stage))}
+.pool input{width:20px; height:20px; accent-color:var(--gold)}
+.pool b{display:block; font-weight:800}
+.pool small{color:var(--muted)}
+.pool .count{font-variant-numeric:tabular-nums; font-weight:800; color:var(--gold); white-space:nowrap}
+.hint{color:var(--muted); font-size:.88rem; margin:10px 0 0}
+.stepper{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+.stepper button{width:40px; height:40px; border-radius:50%; border:2px solid var(--line); background:var(--stage); font-size:1.3rem; font-weight:800}
+.stepper button:hover{border-color:var(--gold)}
+.stepper output{font-family:var(--font-display); font-size:1.6rem; min-width:2ch; text-align:center}
+.team-inputs{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.team-input{display:flex; align-items:center; gap:8px; background:var(--stage); border:1px solid var(--line); border-radius:8px; padding:6px 8px; min-width:0}
+.team-input i{width:14px; height:14px; border-radius:50%; flex:none}
+.team-input input{background:none; border:0; color:var(--ink); font:inherit; font-weight:600; width:100%; min-width:0; outline:none}
+.team-input:focus-within{border-color:var(--gold)}
+.field{display:flex; flex-direction:column; gap:8px; margin-bottom:16px}
+.field label{font-weight:700}
+.field .row{display:flex; align-items:center; gap:12px}
+.field input[type=range]{flex:1; accent-color:var(--gold)}
+.field output{font-family:var(--font-display); font-size:1.4rem; min-width:2ch; text-align:right}
+.field select{background:var(--stage); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:inherit}
+.setup-actions{display:flex; flex-wrap:wrap; gap:14px; align-items:center}
+.btn-primary{font-family:var(--font-display); font-size:1.35rem; padding:16px 34px; border-radius:999px; border:0;
+  background:linear-gradient(180deg,#ffe07a,var(--gold) 55%,var(--gold-deep)); color:#2a1a00; box-shadow:0 5px 0 #7a4f00, 0 12px 30px rgba(255,200,61,.3); transition:transform .1s, box-shadow .1s}
+.btn-primary:hover{transform:translateY(-2px)}
+.btn-primary:active{transform:translateY(3px); box-shadow:0 2px 0 #7a4f00}
+.btn-ghost{padding:12px 20px; border-radius:999px; border:2px solid var(--line); background:transparent; font-weight:700}
+.btn-ghost:hover{border-color:var(--gold)}
+.error{color:var(--bad); font-weight:700; margin:0}
+.sources{color:var(--muted); font-size:.82rem; max-width:110ch; margin:0}
+.sources a{color:var(--muted)}
+
+/* ---------- GAME ---------- */
+#game{display:grid; grid-template-rows:auto 1fr auto; gap:14px; padding-block:12px 16px; min-height:100%}
+.topbar{display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.logo-s{font-family:var(--font-display); font-size:1.25rem; line-height:1; color:var(--ink)}
+.logo-s span{color:var(--gold)}
+.manche-pill{padding:6px 14px; border-radius:999px; background:var(--stage-3); border:1px solid var(--line); font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap}
+.top-tools{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap}
+.tool{display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; border:1px solid var(--line); background:var(--stage-2); font-weight:700; font-size:.88rem}
+.tool[aria-pressed=false]{opacity:.55; text-decoration:line-through}
+.tool:hover{border-color:var(--gold)}
+.tool svg{width:16px; height:16px}
+.stage{display:grid; grid-template-columns:minmax(280px,40%) 1fr; gap:24px; align-items:center; min-height:0}
+.wheel-zone{display:flex; flex-direction:column; align-items:center; gap:14px; min-width:0}
+.wheel-wrap{position:relative; width:min(100%, 64vh); aspect-ratio:1; max-width:100%}
+.wheel-wrap canvas{width:100%; height:100%; display:block; filter:drop-shadow(0 18px 40px rgba(0,0,0,.55))}
+.pointer{position:absolute; left:50%; top:-2%; width:9%; transform:translateX(-50%); transform-origin:50% 12%; z-index:2; filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+.pointer svg{display:block; width:100%; height:auto}
+.spin-result{min-height:56px; display:flex; align-items:center; justify-content:center}
+.chip{font-family:var(--font-display); font-size:1.5rem; padding:8px 22px; border-radius:12px; border:3px solid rgba(255,255,255,.85); box-shadow:0 6px 18px rgba(0,0,0,.4); animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.4); opacity:0} to{transform:scale(1); opacity:1}}
+.play-zone{display:flex; flex-direction:column; gap:14px; min-width:0}
+.category{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; justify-content:center; text-align:center}
+.cat-label{font-size:.78rem; text-transform:uppercase; letter-spacing:.16em; color:var(--gold); font-weight:800}
+#catName{font-family:var(--font-display); font-size:clamp(1.05rem,2.2vw,1.6rem); text-wrap:balance}
+.cat-dip{font-size:.85rem; color:var(--muted); font-weight:600; width:100%}
+.board-frame{position:relative; padding:14px; border-radius:18px; background:linear-gradient(180deg,#2a3f63,#1a2a47); box-shadow:inset 0 0 0 3px #0a1222, 0 18px 40px rgba(0,0,0,.45)}
+.board-frame::before,.board-frame::after{content:""; position:absolute; inset:4px; border-radius:15px; border:5px dotted var(--gold); pointer-events:none}
+.board-frame::after{inset:5px; border-color:#fff3c4; animation:chase 1.1s steps(2) infinite}
+@keyframes chase{50%{opacity:0}}
+.board{container-type:inline-size; display:grid; grid-template-columns:repeat(14,1fr); gap:4px; padding:8px; background:#06101d; border-radius:8px}
+.tile{aspect-ratio:.78; border-radius:3px; display:grid; place-items:center; position:relative; perspective:400px}
+.tile.blank{background:linear-gradient(180deg,var(--tile),var(--tile-dark)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.tile.corner{background:transparent; box-shadow:none}
+.tile.hid{background:var(--tile-face); box-shadow:inset 0 -3px 0 #d8d0b8}
+.tile span{font-family:var(--font-ui); font-weight:900; font-stretch:90%; font-size:clamp(10px, 5.2cqi, 46px); color:transparent; line-height:1}
+.tile.lit{background:var(--lit); box-shadow:0 0 18px var(--lit), inset 0 0 0 2px #fff; animation:glow .5s ease}
+@keyframes glow{from{transform:scale(1.15)} to{transform:scale(1)}}
+.tile.shown span{color:var(--tile-ink)}
+.tile.shown:not(.punct){animation:flip .45s ease}
+@keyframes flip{0%{transform:rotateY(90deg)} 100%{transform:rotateY(0)}}
+.msg{min-height:3em; margin:0; text-align:center; font-size:clamp(1rem,1.6vw,1.25rem); font-weight:700; text-wrap:balance}
+.msg b{color:var(--gold)}
+.actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+.act{font-family:var(--font-display); font-size:clamp(.95rem,1.4vw,1.15rem); padding:12px 20px; border-radius:12px; border:0; color:#1b1300; box-shadow:0 4px 0 rgba(0,0,0,.45); transition:transform .1s, opacity .2s}
+.act:not(:disabled):hover{transform:translateY(-2px)}
+.act:not(:disabled):active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.45)}
+.act:disabled{opacity:.32; box-shadow:none}
+.act.spin{background:linear-gradient(180deg,#ffe07a,var(--gold))}
+.act.vowel{background:linear-gradient(180deg,#9ff3ff,var(--lit))}
+.act.solve{background:linear-gradient(180deg,#b8ffd9,var(--ok))}
+.act.pulse:not(:disabled){animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 4px 0 rgba(0,0,0,.45), 0 0 0 8px rgba(61,220,151,.25)}}
+.keyboard{display:grid; grid-template-columns:repeat(13,1fr); gap:6px}
+.key{aspect-ratio:1.05; border-radius:8px; border:0; font-weight:900; font-size:clamp(.9rem,1.5vw,1.3rem); background:#e9edf4; color:#14213a; box-shadow:0 3px 0 #8a96ab; transition:transform .08s}
+.key.v{background:#cdf6ff; box-shadow:0 3px 0 #3aa9c3}
+.key:not(:disabled):hover{transform:translateY(-2px)}
+.key:disabled{opacity:.18; box-shadow:none}
+.key.used{opacity:.12; text-decoration:line-through}
+.keyboard.mode-c .key:not(.v):not(:disabled){outline:2px solid var(--gold)}
+.keyboard.mode-v .key.v:not(:disabled){outline:2px solid var(--lit)}
+.teacher{display:flex; gap:8px; flex-wrap:wrap; justify-content:center}
+.teacher button{padding:6px 12px; border-radius:999px; border:1px dashed var(--line); background:transparent; color:var(--muted); font-size:.82rem; font-weight:700}
+.teacher button:hover{color:var(--ink); border-color:var(--gold)}
+.teacher button.armed{color:var(--bad); border-color:var(--bad); border-style:solid}
+
+/* étiquettes-prix des équipes */
+.teams{display:flex; gap:14px; flex-wrap:wrap; justify-content:center}
+.tag{--c:#fff; position:relative; min-width:170px; flex:1 1 170px; max-width:260px; padding:12px 16px 12px 34px; border:0; text-align:left; color:#13192a;
+  background:var(--c); clip-path:polygon(22px 0,100% 0,100% 100%,22px 100%,0 50%); transition:transform .25s, filter .25s; filter:saturate(.75) brightness(.82)}
+.tag::before{content:""; position:absolute; left:12px; top:50%; width:10px; height:10px; margin-top:-5px; border-radius:50%; background:var(--stage); box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+.tag .tn{font-weight:900; font-size:1rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.tag .tm{font-size:.8rem; font-weight:700; opacity:.8; font-variant-numeric:tabular-nums}
+.tag .tt{font-family:var(--font-display); font-size:1.6rem; line-height:1.05; font-variant-numeric:tabular-nums; display:block}
+.tag .turn{position:absolute; right:10px; top:8px; font-size:.68rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; background:#13192a; color:var(--c); padding:2px 7px; border-radius:4px; opacity:0}
+.teams.has-active .tag:not(.active){opacity:.45; filter:saturate(.5) brightness(.7)}
+.tag.active{transform:translateY(-5px) scale(1.06); filter:none; z-index:1; animation:tagGlow 1.6s ease-in-out infinite}
+@keyframes tagGlow{50%{filter:brightness(1.12) drop-shadow(0 0 14px var(--c))}}
+.tag.active .turn{opacity:1}
+.tag.bump{animation:bump .5s ease}
+@keyframes bump{40%{transform:translateY(-8px) scale(1.07)}}
+
+/* ---------- OVERLAYS ---------- */
+.ov{position:fixed; inset:0; z-index:40; display:grid; place-items:center; background:rgba(4,9,18,.8); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
+  padding:max(16px, env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) max(16px, env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); overflow-y:auto}
+.card{width:min(760px,100%); background:linear-gradient(180deg,var(--stage-3),var(--stage-2)); border:1px solid var(--line); border-radius:18px; padding:26px; box-shadow:0 30px 80px rgba(0,0,0,.6); animation:rise .35s ease}
+@keyframes rise{from{transform:translateY(24px); opacity:0}}
+.card h2{font-family:var(--font-display); font-weight:400; font-size:clamp(1.4rem,3vw,2rem); margin:0 0 6px; text-wrap:balance}
+.card .sub{color:var(--muted); margin:0 0 16px}
+.card ol{padding-left:1.3em; margin:0 0 18px; display:grid; gap:8px}
+.card input[type=text]{width:100%; padding:14px 16px; border-radius:10px; border:2px solid var(--line); background:var(--stage); color:var(--ink); font:inherit; font-size:1.15rem; font-weight:700; text-transform:uppercase}
+.card input[type=text]:focus{border-color:var(--gold); outline:none}
+.row-btns{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px}
+.b{padding:12px 20px; border-radius:10px; border:0; font-weight:800}
+.b.ok{background:var(--ok); color:#06291a}
+.b.bad{background:var(--bad); color:#2b0507}
+.b.gold{background:var(--gold); color:#2a1a00}
+.b.line{background:transparent; border:2px solid var(--line)}
+.check-res{min-height:1.5em; font-weight:800; margin:10px 0 0}
+.team-chip{display:inline-flex; align-items:center; gap:8px; padding:5px 12px; border-radius:999px; font-weight:900; color:#13192a; margin-bottom:12px}
+.bonus-phrase{font-family:var(--font-display); font-size:clamp(1rem,2.2vw,1.35rem); background:#06101d; border-radius:10px; padding:12px 16px; margin:0 0 16px; letter-spacing:.02em; text-wrap:balance}
+.bonus-q{font-size:clamp(1.1rem,2.2vw,1.45rem); font-weight:800; margin:0 0 14px; text-wrap:balance}
+.timer{height:8px; background:var(--stage); border-radius:99px; overflow:hidden; margin-bottom:16px}
+.timer i{display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--bad),var(--gold),var(--ok)); transform-origin:left; transition:transform .1s linear}
+.timer-txt{float:right; font-weight:900; font-variant-numeric:tabular-nums; color:var(--gold)}
+.choices{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.choice{display:flex; gap:12px; align-items:center; text-align:left; padding:14px 16px; border-radius:12px; border:2px solid var(--line); background:var(--stage); font-weight:700; font-size:1.02rem; min-width:0}
+.choice .k{flex:none; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; background:var(--stage-3); font-family:var(--font-display); color:var(--gold)}
+.choice:not(:disabled):hover{border-color:var(--gold)}
+.choice.right{border-color:var(--ok); background:color-mix(in srgb, var(--ok) 22%, var(--stage))}
+.choice.wrong{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 22%, var(--stage))}
+.choice:disabled:not(.right):not(.wrong){opacity:.5}
+
+/* ticket de caisse du référentiel */
+.ticket{position:relative; margin-top:20px; background:var(--paper); color:var(--paper-ink); font-family:var(--font-ticket); padding:18px 20px; font-size:.95rem; animation:print .6s ease-out}
+.ticket::before,.ticket::after{content:""; position:absolute; left:0; right:0; height:10px; background:linear-gradient(-45deg, transparent 7px, var(--paper) 0) 0 0/14px 14px, linear-gradient(45deg, transparent 7px, var(--paper) 0) 0 0/14px 14px}
+.ticket::before{top:-9px; transform:scaleY(-1)}
+.ticket::after{bottom:-9px}
+@keyframes print{from{clip-path:inset(0 0 100% 0)} to{clip-path:inset(0 0 -20px 0)}}
+.ticket h3{font-family:var(--font-ticket); text-align:center; margin:0 0 4px; font-size:1rem; letter-spacing:.2em}
+.ticket .dash{border-top:2px dashed #9aa1ad; margin:10px 0}
+.ticket .l{display:flex; justify-content:space-between; gap:12px}
+.ticket .l span:last-child{text-align:right}
+.ticket .tot{font-weight:700; font-size:1.2rem}
+.ticket p{margin:6px 0}
+
+/* final */
+.final{width:min(920px,100%); text-align:center}
+.final h2{font-size:clamp(1.8rem,5vw,3.2rem)}
+.winner{font-family:var(--font-display); font-size:clamp(2rem,7vw,4.4rem); line-height:1; margin:10px 0 4px; text-shadow:0 4px 0 rgba(0,0,0,.45); text-wrap:balance}
+.winner-pts{font-weight:900; font-size:1.3rem; color:var(--gold); margin:0 0 20px; font-variant-numeric:tabular-nums}
+.suspense{font-family:var(--font-display); font-size:clamp(1.4rem,4vw,2.4rem); color:var(--gold); animation:blink .5s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.podium{display:flex; align-items:flex-end; justify-content:center; gap:12px; margin:18px 0}
+.pod{flex:0 1 200px; min-width:0; display:flex; flex-direction:column; align-items:center; gap:8px}
+.pod .pname{font-weight:900; font-size:1rem; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.pod .block{width:100%; border-radius:10px 10px 0 0; display:grid; place-items:start center; padding-top:10px; font-family:var(--font-display); font-size:2rem; color:#13192a; animation:grow .8s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes grow{from{transform:scaleY(0); transform-origin:bottom}}
+.pod .ppts{font-weight:800; font-variant-numeric:tabular-nums; color:var(--muted)}
+.ranking{list-style:none; padding:0; margin:0 auto 18px; max-width:560px; display:grid; gap:6px; text-align:left}
+.ranking li{display:grid; grid-template-columns:2.2em 1fr auto; gap:10px; align-items:center; padding:8px 12px; border-radius:8px; background:var(--stage)}
+.ranking .r{font-family:var(--font-display); color:var(--gold)}
+.ranking .s{font-variant-numeric:tabular-nums; font-weight:900}
+.ranking small{display:block; color:var(--muted); font-weight:600}
+.final .row-btns{justify-content:center}
+#confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:60}
+
+@media (max-width:1100px){ .setup-grid{grid-template-columns:1fr 1fr} .setup-grid .panel:last-child{grid-column:1/-1} }
+@media (max-width:900px){
+  .stage{grid-template-columns:1fr}
+  .wheel-wrap{width:min(100%, 440px)}
+  .hero{grid-template-columns:1fr; justify-items:center; text-align:center}
+  .hero-wheel{max-width:220px}
+  .lede{margin-inline:auto}
+}
+@media (max-width:640px){
+  .setup-grid{grid-template-columns:1fr}
+  .team-inputs{grid-template-columns:1fr}
+  .keyboard{grid-template-columns:repeat(9,1fr)}
+  .choices{grid-template-columns:1fr}
+  .tag{min-width:140px; flex-basis:140px}
+  .card{padding:18px}
+}
+/* Tout le jeu tient sur un seul écran (ordinateur, vidéoprojecteur) */
+@media (min-width:901px) and (min-height:520px){
+  #app:has(#game:not([hidden])){height:100%}
+  #game{height:100%; min-height:0; overflow:hidden; grid-template-rows:auto minmax(0,1fr) auto; gap:clamp(6px,1.4vh,14px); padding-block:clamp(6px,1.2vh,12px)}
+  .stage{min-height:0; height:100%}
+  .wheel-zone{gap:clamp(4px,1vh,12px); min-height:0}
+  .wheel-wrap{width:min(100%, 56vh)}
+  .spin-result{min-height:44px}
+  .chip{font-size:1.2rem; padding:6px 18px}
+  .play-zone{gap:clamp(6px,1.1vh,12px); min-height:0; justify-content:center}
+  .board-frame{width:min(100%, 82vh); margin-inline:auto; padding:10px}
+  .board{padding:6px; gap:3px}
+  .msg{min-height:2.5em; font-size:clamp(.95rem,2.1vh,1.2rem)}
+  .act{padding:clamp(7px,1.3vh,12px) 18px; font-size:clamp(.9rem,2vh,1.1rem)}
+  .keyboard{width:min(100%, 82vh); margin-inline:auto; gap:5px}
+  .key{aspect-ratio:auto; height:clamp(28px,5.2vh,50px)}
+  .teacher button{padding:4px 10px}
+  .cat-dip{width:auto}
+  .tag{padding:7px 14px 7px 32px}
+  .tag .tt{font-size:clamp(1.1rem,2.6vh,1.6rem)}
+  .teams{padding-top:6px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important; transition:none!important}
+}
+
+/* ====== AJOUTS ÉCO-GESTION : cagnottes visibles, case Échange ====== */
+.pool span{min-width:0}
+.pool .count{display:block; margin-top:2px; font-size:.82rem}
+.pool b{font-family:var(--font-display); font-weight:400; font-size:1.3rem; letter-spacing:.02em}
+
+/* étiquettes d'équipe : la cagnotte de la manche passe au premier plan */
+.tag{display:flex; flex-direction:column; gap:5px; min-width:180px; flex:1 1 180px; max-width:270px; padding:10px 14px 10px 34px}
+.tag .tn{padding-right:52px}
+.tag .pot{display:flex; align-items:center; justify-content:space-between; gap:8px; background:#13192a; color:var(--gold); border-radius:8px; padding:4px 10px; box-shadow:inset 0 0 0 2px rgba(255,200,61,.35)}
+.tag .pot small{font-size:.66rem; font-weight:900; letter-spacing:.1em; text-transform:uppercase; color:#cfd8e6; line-height:1.1}
+.tag .pot b{font-family:var(--font-display); font-weight:400; font-size:clamp(1.35rem,3.4vh,2.1rem); line-height:1.05; font-variant-numeric:tabular-nums}
+.tag .pot.flash{animation:potFlash .9s ease}
+.tag .pot.flash-neg{animation:potNeg .9s ease}
+@keyframes potFlash{0%{transform:scale(1.12); box-shadow:inset 0 0 0 3px var(--gold), 0 0 26px var(--gold)} 100%{transform:scale(1); box-shadow:inset 0 0 0 2px rgba(255,200,61,.35)}}
+@keyframes potNeg{0%{transform:scale(1.08); box-shadow:inset 0 0 0 3px var(--bad), 0 0 26px var(--bad)} 100%{transform:scale(1); box-shadow:inset 0 0 0 2px rgba(255,200,61,.35)}}
+.tag .bank{display:flex; justify-content:space-between; align-items:baseline; font-size:.8rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em}
+.tag .bank b{font-family:var(--font-display); font-weight:400; font-size:1.1rem; letter-spacing:0; font-variant-numeric:tabular-nums}
+
+/* grand compteur de la cagnotte sous la roue */
+.potbox{--c:var(--gold); display:flex; align-items:center; gap:14px; padding:8px 18px; border-radius:14px; background:rgba(6,16,29,.85); border:3px solid var(--c);
+  box-shadow:0 0 24px color-mix(in srgb, var(--c) 45%, transparent); max-width:100%; transition:border-color .3s, box-shadow .3s}
+.potbox[hidden]{display:none!important}
+.potbox .pl{display:flex; flex-direction:column; line-height:1.15; min-width:0}
+.potbox .pl small{font-size:.7rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.potbox .pl span{font-weight:900; color:var(--c); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:14ch}
+.potbox .pv{font-family:var(--font-display); font-size:clamp(2rem,5vh,3.2rem); color:var(--gold); line-height:1; font-variant-numeric:tabular-nums; text-shadow:0 3px 0 #7a4f00}
+.potbox .pv i{font-style:normal; font-size:.45em; margin-left:4px; color:var(--muted); text-shadow:none}
+.potbox.pulse{animation:boxPulse .8s ease}
+@keyframes boxPulse{40%{transform:scale(1.07)}}
+
+/* explosion de points sur le plateau */
+.board-frame{position:relative}
+.burst{position:absolute; left:50%; top:50%; z-index:5; pointer-events:none; white-space:nowrap;
+  font-family:var(--font-display); font-size:clamp(2.6rem,7vw,5.4rem); line-height:1; color:var(--gold);
+  text-shadow:0 5px 0 #7a4f00, 0 0 40px rgba(255,200,61,.7); animation:burst 1.8s cubic-bezier(.2,1.2,.4,1) forwards}
+.burst small{display:block; text-align:center; font-family:var(--font-ui); font-weight:900; font-size:.3em; letter-spacing:.14em; text-transform:uppercase; color:#fff; text-shadow:0 2px 6px #000}
+.burst.neg{color:var(--bad); text-shadow:0 5px 0 #5c0b0e, 0 0 40px rgba(255,93,98,.6)}
+.burst.swap{color:#e0b3ff; text-shadow:0 5px 0 #3c0d63, 0 0 40px rgba(190,120,255,.7)}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(.3); opacity:0} 14%{transform:translate(-50%,-50%) scale(1.22); opacity:1} 26%{transform:translate(-50%,-50%) scale(1)} 78%{transform:translate(-50%,-50%) scale(1); opacity:1} 100%{transform:translate(-50%,-95%) scale(.9); opacity:0}}
+
+/* points qui s'envolent au-dessus de l'étiquette */
+.floater{position:fixed; z-index:35; pointer-events:none; transform:translate(-50%,0); white-space:nowrap;
+  font-family:var(--font-display); font-size:clamp(1.5rem,3.4vh,2.2rem); color:var(--gold); text-shadow:0 3px 0 #000, 0 0 16px rgba(255,200,61,.6); animation:floatUp 1.7s ease-out forwards}
+.floater.neg{color:var(--bad); text-shadow:0 3px 0 #000}
+@keyframes floatUp{0%{transform:translate(-50%,10px) scale(.6); opacity:0} 15%{transform:translate(-50%,0) scale(1.15); opacity:1} 100%{transform:translate(-50%,-80px) scale(1); opacity:0}}
+
+/* fenêtre Échange */
+.swap-mine{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; border-radius:12px; background:#06101d; margin:0 0 14px; font-weight:800}
+.swap-mine b{font-family:var(--font-display); font-weight:400; font-size:1.8rem; color:var(--gold)}
+.swap-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px}
+.swap-team{--c:#fff; display:flex; flex-direction:column; gap:2px; text-align:left; padding:12px 14px; border-radius:12px; border:3px solid var(--c); background:var(--stage); min-width:0}
+.swap-team .sn{font-weight:900; color:var(--c); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.swap-team .sv{font-family:var(--font-display); font-size:1.9rem; line-height:1.05; color:var(--gold)}
+.swap-team .sh{font-size:.78rem; color:var(--muted); font-weight:700}
+.swap-team:not(:disabled):hover{background:color-mix(in srgb, var(--c) 20%, var(--stage)); transform:translateY(-2px)}
+.swap-team:disabled{opacity:.35}
+.chip.ex{background:linear-gradient(180deg,#a64ee0,#6a1b9a)!important; color:#fff!important}
+
+@media (min-width:901px) and (min-height:520px){
+  .wheel-wrap{width:min(100%, 50vh)}
+  .spin-result{min-height:40px}
+  .tag{padding:6px 12px 6px 30px; gap:3px}
+  .tag .bank{font-size:.72rem}
+  .potbox{padding:5px 16px}
+}
+
+/* étiquettes des équipes en attente : moins estompées pour lire leurs cagnottes */
+.teams.has-active .tag:not(.active){opacity:.78; filter:saturate(.7) brightness(.85)}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ============ ÉCRAN DE CONFIGURATION ============ -->
+  <section id="setup" class="screen">
+    <div class="hero">
+      <div class="hero-wheel"><canvas id="miniWheel" aria-hidden="true"></canvas></div>
+      <div>
+        <p class="eyebrow">Jeu d'équipe · Économie-gestion · Bac Pro</p>
+        <h1>La Roue de l'<em>Éco-Gestion</em></h1>
+        <p class="lede">Tournez la roue, découvrez la phrase lettre par lettre, puis répondez à la question de cours qui s'y rattache. Quatre modules du programme d'économie-gestion du Bac Pro, de la 2de à la Terminale.</p>
+        <p class="author">Un jeu de <span>LEGER Isabelle</span></p>
+      </div>
+    </div>
+
+    <div class="setup-grid">
+      <fieldset class="panel">
+        <legend>1 · Niveau(x)</legend>
+        <div class="pools" id="pools"></div>
+        <p class="hint">Vous pouvez cocher plusieurs niveaux pour mélanger les phrases (révisions).</p>
+      </fieldset>
+
+      <fieldset class="panel">
+        <legend>2 · Équipes</legend>
+        <div class="stepper">
+          <button type="button" id="teamMinus" aria-label="Retirer une équipe">−</button>
+          <output id="teamCount">4</output>
+          <button type="button" id="teamPlus" aria-label="Ajouter une équipe">+</button>
+          <span class="hint" style="margin:0">noms modifiables ci-dessous</span>
+        </div>
+        <div class="team-inputs" id="teamInputs"></div>
+      </fieldset>
+
+      <fieldset class="panel">
+        <legend>3 · Partie</legend>
+        <div class="field">
+          <label for="rngManches">Nombre de manches</label>
+          <div class="row"><input type="range" id="rngManches" min="2" max="10" value="5"><output id="outManches">5</output></div>
+        </div>
+        <div class="field">
+          <label for="selTimer">Temps pour la question de cours</label>
+          <select id="selTimer">
+            <option value="20">20 secondes</option>
+            <option value="30" selected>30 secondes</option>
+            <option value="45">45 secondes</option>
+            <option value="0">Sans limite</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="selSwap">Case « Échange »</label>
+          <select id="selSwap">
+            <option value="take" selected>Prendre la cagnotte d'une autre équipe</option>
+            <option value="swap">Échanger sa cagnotte avec une autre équipe</option>
+          </select>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="setup-actions">
+      <button class="btn-primary" id="btnStart" type="button">Lancer le jeu</button>
+      <button class="btn-ghost" id="btnRules1" type="button">Règles du jeu</button>
+      <p class="error" id="setupErr" hidden></p>
+    </div>
+    <p class="sources">Modules, questions et notions : programme d'économie-gestion du baccalauréat professionnel (<a href="https://education.gouv.fr/media/602/download" target="_blank" rel="noopener">ministère de l'Éducation nationale, février 2019</a>). Titres des chapitres repris du sommaire du manuel. Le programme est modulaire : la répartition 2de (modules 1 et 2), 1ère (module 3), Tles (module 4) est une proposition. Données juridiques et chiffrées vérifiées en novembre 2026 sur <a href="https://www.service-public.gouv.fr/" target="_blank" rel="noopener">service-public.gouv.fr</a>, <a href="https://code.travail.gouv.fr/" target="_blank" rel="noopener">code.travail.gouv.fr</a> et <a href="https://www.economie.gouv.fr/entreprises/tout-savoir-tva" target="_blank" rel="noopener">economie.gouv.fr</a>.</p>
+  </section>
+
+  <!-- ============ ÉCRAN DE JEU ============ -->
+  <section id="game" class="screen" hidden>
+    <header class="topbar">
+      <div class="logo-s">La Roue de l'<span>Éco-Gestion</span></div>
+      <span class="author-s">par LEGER Isabelle</span>
+      <div class="manche-pill" id="manchePill">Manche 1 / 5</div>
+      <div class="top-tools">
+        <button class="tool" id="tSound" aria-pressed="true" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>Sons</button>
+        <button class="tool" id="tRules" type="button">Règles</button>
+        <button class="tool" id="tFull" type="button">Plein écran</button>
+        <button class="tool" id="tEnd" type="button">Terminer</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="wheel-zone">
+        <div class="wheel-wrap">
+          <canvas id="wheel" aria-label="Roue des points"></canvas>
+          <div class="pointer" id="pointer"><svg viewBox="0 0 40 52"><path d="M20 50 3 10a17 17 0 1 1 34 0z" fill="#ffc83d" stroke="#7a4f00" stroke-width="3"/><circle cx="20" cy="15" r="6" fill="#fff6d6"/></svg></div>
+        </div>
+        <div class="spin-result" id="spinResult"></div>
+        <div class="potbox" id="potbox" hidden aria-live="polite">
+          <div class="pl"><small>Cagnotte de la manche</small><span id="potName"></span></div>
+          <div class="pv"><span id="potVal">0</span><i>pts</i></div>
+        </div>
+      </div>
+
+      <div class="play-zone">
+        <div class="category"><span class="cat-label">Chapitre</span><span id="catName"></span><span class="cat-dip" id="catDip"></span></div>
+        <div class="board-frame" id="boardFrame"><div class="board" id="board"></div></div>
+        <p class="msg" id="msg" aria-live="polite"></p>
+        <div class="actions">
+          <button class="act spin" id="btnSpin" type="button">Tourner la roue</button>
+          <button class="act vowel" id="btnVowel" type="button">Acheter une voyelle · 250</button>
+          <button class="act solve" id="btnSolve" type="button">Proposer la solution</button>
+        </div>
+        <div class="keyboard" id="kbd"></div>
+        <div class="teacher">
+          <button type="button" id="btnNextTeam">Passer la main à l'équipe suivante</button>
+          <button type="button" id="btnAbandon">Personne ne trouve : révéler la phrase</button>
+        </div>
+      </div>
+    </main>
+
+    <div class="teams" id="teams"></div>
+  </section>
+</div>
+
+<!-- Règles -->
+<div class="ov" id="rulesOv" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <h2 id="rulesTitle">Règles du jeu</h2>
+    <p class="sub">Une équipe joue à la fois. Le professeur pilote le jeu depuis l'ordinateur relié au vidéoprojecteur.</p>
+    <ol>
+      <li><b>Tourner la roue</b>, puis annoncer une <b>consonne</b>. Chaque consonne présente rapporte la valeur de la case × le nombre de fois où elle apparaît. Les points s'ajoutent à la <b>cagnotte de la manche</b> et l'équipe garde la main.</li>
+      <li><b>Acheter une voyelle</b> (A, E, I, O, U, Y) coûte 250 points, pris sur la cagnotte de la manche.</li>
+      <li><b>Banqueroute</b> : la cagnotte de la manche retombe à 0 et la main passe. <b>Passe</b> : la main passe.</li>
+      <li><b>Échange</b> : l'équipe décide si elle <b>prend</b> (ou non) la cagnotte de la manche d'une autre équipe, puis elle garde la main. Selon le réglage choisi au départ, elle prend la cagnotte (l'autre équipe la perd) ou les deux équipes échangent leurs cagnottes.</li>
+      <li>Une lettre absente ou une mauvaise réponse fait passer la main à l'équipe suivante.</li>
+      <li>L'équipe qui <b>trouve la phrase</b> met sa cagnotte en banque, avec une <b>prime de 300 points</b>. Les cagnottes des autres équipes pour cette manche sont perdues.</li>
+      <li><b>Question de cours</b> : l'équipe gagnante répond à une question liée à la phrase, parmi 4 propositions. Bonne réponse : <b>+500 points</b> en banque.</li>
+      <li>Côté professeur : barre d'espace = tourner la roue, touches du clavier = lettres. Un clic sur l'étiquette d'une équipe lui donne la main.</li>
+    </ol>
+    <div class="row-btns"><button class="b gold" type="button" id="rulesClose">C'est parti</button></div>
+  </div>
+</div>
+
+<!-- Échange -->
+<div class="ov" id="swapOv" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="swapTitle">
+    <div id="swapTeam"></div>
+    <h2 id="swapTitle">Échange !</h2>
+    <p class="sub" id="swapSub"></p>
+    <div class="swap-mine" id="swapMine"></div>
+    <div class="swap-grid" id="swapGrid"></div>
+    <div class="row-btns"><button class="b line" type="button" id="swapNone">Ne rien prendre</button></div>
+  </div>
+</div>
+
+<!-- Proposer la solution -->
+<div class="ov" id="solveOv" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="solveTitle">
+    <div id="solveTeam"></div>
+    <h2 id="solveTitle">L'équipe propose sa réponse</h2>
+    <p class="sub">Les élèves lisent la phrase à voix haute. Vous pouvez aussi la taper pour une vérification automatique.</p>
+    <label for="solveInput" class="sub" style="display:block;margin:0 0 6px;font-weight:700;color:var(--ink)">Réponse proposée (facultatif)</label>
+    <input type="text" id="solveInput" autocomplete="off" spellcheck="false">
+    <p class="check-res" id="solveRes" aria-live="polite"></p>
+    <div class="row-btns">
+      <button class="b gold" type="button" id="solveCheck">Vérifier la saisie</button>
+      <button class="b ok" type="button" id="solveYes">Réponse juste</button>
+      <button class="b bad" type="button" id="solveNo">Réponse fausse</button>
+      <button class="b line" type="button" id="solveCancel">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Question de cours -->
+<div class="ov" id="bonusOv" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="bonusTitle">
+    <div id="bonusTeam"></div>
+    <h2 id="bonusTitle">Question de cours</h2>
+    <p class="bonus-phrase" id="bonusPhrase"></p>
+    <div id="timerBox"><span class="timer-txt" id="timerTxt"></span><div class="timer"><i id="timerBar"></i></div></div>
+    <p class="bonus-q" id="bonusQ"></p>
+    <div class="choices" id="choices"></div>
+    <div id="ticketBox"></div>
+    <div class="row-btns" id="bonusNext" hidden><button class="b gold" type="button" id="btnNextManche">Manche suivante</button></div>
+  </div>
+</div>
+
+<!-- Confirmation de fin -->
+<div class="ov" id="endOv" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+    <h2 id="endTitle">Terminer la partie maintenant ?</h2>
+    <p class="sub">Le classement final s'affichera avec les points déjà en banque. Les cagnottes de la manche en cours ne comptent pas.</p>
+    <div class="row-btns"><button class="b gold" type="button" id="endYes">Afficher le classement</button><button class="b line" type="button" id="endNo">Continuer à jouer</button></div>
+  </div>
+</div>
+
+<!-- Final -->
+<div class="ov" id="finalOv" hidden>
+  <div class="card final" role="dialog" aria-modal="true" aria-labelledby="finalTitle">
+    <h2 id="finalTitle">Et l'équipe gagnante est…</h2>
+    <div id="finalBody"></div>
+    <p class="final-author">Un jeu de LEGER Isabelle</p>
+  </div>
+</div>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+/* ======================================================================
+   CONTENUS — Économie-gestion, Bac Pro (programme : BO, février 2019).
+   Titres des modules, questions et chapitres repris du sommaire fourni.
+   Le programme est modulaire : la répartition 2de / 1ère / Tles
+   ci-dessous est une proposition, modifiable dans LEVEL_OF_MODULE.
+   ====================================================================== */
+const POOLS = {
+  "2de": { label: "2de", sub: "Modules 1 et 2 · chapitres 1 à 18" },
+  "1re": { label: "1ère", sub: "Module 3 · chapitres 19 à 27" },
+  "Tle": { label: "Tles", sub: "Module 4 · chapitres 28 à 37" }
+};
+const LEVEL_OF_MODULE = { 1: "2de", 2: "2de", 3: "1re", 4: "Tle" };
+const MODULES = {
+  1: "Module 1 · Découvrir l'environnement d'une entreprise",
+  2: "Module 2 · Les choix d'une entreprise en matière de production",
+  3: "Module 3 · De la création de valeur à sa répartition",
+  4: "Module 4 · Les mutations de la relation de travail"
+};
+/* [module, question du programme] pour chaque chapitre */
+const QUESTIONS = [
+  { mod: 1, chaps: [1, 2, 3], q: "Comment se caractérise un secteur d'activité ?" },
+  { mod: 1, chaps: [4, 5], q: "Comment une entreprise interagit-elle avec son environnement ?" },
+  { mod: 1, chaps: [6, 7, 8, 9], q: "Comment les relations entre les agents économiques sont-elles formalisées ?" },
+  { mod: 2, chaps: [10, 11], q: "Comment se structure une entreprise ?" },
+  { mod: 2, chaps: [12, 13], q: "Comment une entreprise définit-elle sa production ?" },
+  { mod: 2, chaps: [14, 15, 16], q: "Comment une entreprise organise-t-elle sa production ?" },
+  { mod: 2, chaps: [17, 18], q: "Comment une entreprise peut-elle s'adapter à son environnement ?" },
+  { mod: 3, chaps: [19, 20, 21], q: "Comment une entreprise crée-t-elle de la valeur ?" },
+  { mod: 3, chaps: [22], q: "Quels sont les éléments à prendre en compte par l'entreprise pour fixer un prix de vente ?" },
+  { mod: 3, chaps: [23, 24], q: "Comment se répartit la richesse produite par les agents dans une économie ?" },
+  { mod: 3, chaps: [25, 26, 27], q: "Comment les ménages gèrent-ils leur budget ?" },
+  { mod: 4, chaps: [28, 29, 30], q: "En quoi la relation de travail est-elle modifiée par le développement du numérique ?" },
+  { mod: 4, chaps: [31, 32, 33, 34, 35], q: "Quel cadre juridique pour une relation de travail : salarié ou indépendant ?" },
+  { mod: 4, chaps: [36, 37], q: "Pourquoi entrer dans une logique de formation tout au long de la vie ?" }
+];
+const CHAPS = {
+  1: "Le secteur d'activité",
+  2: "L'importance du secteur d'activité dans l'économie",
+  3: "La diversité des organisations et leur finalité",
+  4: "Les agents économiques",
+  5: "Les échanges de l'entreprise avec les autres agents économiques",
+  6: "Les contrats",
+  7: "Les droits et les obligations des parties au contrat",
+  8: "L'inexécution du contrat",
+  9: "La responsabilité civile contractuelle",
+  10: "Les fonctions d'une entreprise et leurs interactions",
+  11: "La structure de l'entreprise",
+  12: "La demande et l'offre de l'entreprise",
+  13: "Les évolutions de la demande et de l'offre de l'entreprise",
+  14: "Les facteurs de production d'une entreprise",
+  15: "L'organisation de la production",
+  16: "Le choix du mode de production",
+  17: "L'environnement de l'entreprise",
+  18: "Les décisions de l'entreprise face à son environnement",
+  19: "Les coûts liés à la production",
+  20: "La valeur ajoutée",
+  21: "Le résultat de l'entreprise",
+  22: "La fixation du prix de vente",
+  23: "Les indicateurs de la richesse",
+  24: "L'action de l'État dans la répartition de la richesse",
+  25: "La consommation des ménages",
+  26: "L'évolution des modes de consommation",
+  27: "Les différentes formes d'épargne",
+  28: "Les effets du développement du numérique dans les entreprises",
+  29: "Les nouvelles formes de travail",
+  30: "Les enjeux et les limites de l'e-communication",
+  31: "Les statuts de salarié et d'indépendant",
+  32: "Les contrats de travail",
+  33: "Le cadre juridique de la relation de travail",
+  34: "Les droits et les obligations de l'employeur et du salarié",
+  35: "La fin d'une relation de travail",
+  36: "La formation tout au long de la vie",
+  37: "L'accès à la formation"
+};
+/* p = phrase du plateau · q = question compétence · c = choix (le 1er est la bonne réponse) · ex = explication */
+/*DATA*/
+const RAW = [
+  // ================= MODULE 1 =================
+  {ch:1, p:"MÊME ACTIVITÉ PRINCIPALE, MÊME SECTEUR",
+   q:"Comment appelle-t-on le regroupement des entreprises qui ont la même activité principale ?",
+   c:["Un secteur d'activité","Une filière","Un réseau de distribution","Une zone de chalandise"],
+   ex:"Un secteur d'activité regroupe les entreprises qui ont la même activité principale (par exemple le commerce de détail alimentaire)."},
+  {ch:1, p:"UN SERVICE NE SE STOCKE PAS",
+   q:"Une coupe de cheveux chez le coiffeur est…",
+   c:["Un service","Un bien","Une matière première","Un bien d'équipement"],
+   ex:"Un service est immatériel : il est produit et consommé en même temps, il ne se stocke pas. Un bien est matériel et peut être stocké."},
+  {ch:1, p:"UN SERVICE GRATUIT OU PRESQUE GRATUIT",
+   q:"Un service rendu gratuitement ou à un prix très inférieur à son coût relève de la production…",
+   c:["Non marchande","Marchande","Agricole","Industrielle"],
+   ex:"La production non marchande (école publique, hôpital public…) est fournie gratuitement ou à un prix inférieur à son coût. La production marchande est vendue sur un marché."},
+  {ch:2, p:"LE COMMERCE APPARTIENT AU SECTEUR TERTIAIRE",
+   q:"Le secteur tertiaire regroupe principalement les activités de…",
+   c:["Services","Agriculture et pêche","Industrie","Construction"],
+   ex:"Primaire : agriculture, pêche. Secondaire : industrie, construction. Tertiaire : services (commerce, transport, banque, accueil…)."},
+  {ch:2, p:"NOMBRE DE SALARIÉS ET CHIFFRE D'AFFAIRES",
+   q:"Ces indicateurs permettent surtout de mesurer…",
+   c:["Le poids d'un secteur dans l'économie","La finalité d'une organisation","Le pouvoir d'achat des ménages","La productivité d'un salarié"],
+   ex:"Pour évaluer l'importance d'un secteur, on observe le nombre d'entreprises, le nombre de salariés, le chiffre d'affaires ou la valeur ajoutée du secteur."},
+  {ch:2, p:"DÉFENDRE LES INTÉRÊTS DES ENTREPRISES DU SECTEUR",
+   q:"Quel type d'organisation joue ce rôle ?",
+   c:["Une organisation professionnelle","Un syndicat de salariés","Une association de consommateurs","Une collectivité territoriale"],
+   ex:"Une organisation professionnelle représente et défend les entreprises d'un secteur (exemple : l'UMIH pour l'hôtellerie-restauration)."},
+  {ch:3, p:"PLACER L'HUMAIN AVANT LE PROFIT",
+   q:"Quelle famille d'organisations défend ce principe ?",
+   c:["L'économie sociale et solidaire (ESS)","Les sociétés cotées en Bourse","Les entreprises individuelles","Les multinationales"],
+   ex:"L'ESS (associations, coopératives, mutuelles, fondations…) est encadrée par la loi du 31 juillet 2014. Elle recherche une utilité sociale et une gouvernance démocratique."},
+  {ch:3, p:"UNE ASSOCIATION A UN BUT NON LUCRATIF",
+   q:"Cela signifie que l'association…",
+   c:["Ne partage pas ses bénéfices entre ses membres","N'a pas le droit de vendre","N'a jamais de salariés","Ne paie pas ses fournisseurs"],
+   ex:"Une association peut vendre et employer des salariés, mais ses éventuels excédents ne sont pas partagés entre ses membres : ils servent son projet."},
+  {ch:3, p:"SERVIR L'INTÉRÊT GÉNÉRAL",
+   q:"C'est la finalité principale…",
+   c:["D'une organisation publique","D'une entreprise privée","D'une société d'actionnaires","D'un commerce franchisé"],
+   ex:"Une organisation publique (mairie, hôpital public, lycée) sert l'intérêt général. Une entreprise privée recherche d'abord le profit."},
+  {ch:4, p:"LES MÉNAGES CONSOMMENT ET ÉPARGNENT",
+   q:"Quelle est la fonction principale des ménages ?",
+   c:["Consommer","Produire des biens et services marchands","Prélever des impôts","Accorder des crédits"],
+   ex:"Les ménages consomment (et épargnent). Les entreprises produisent, les administrations publiques redistribuent, les banques financent l'économie."},
+  {ch:4, p:"LES BANQUES FINANCENT L'ÉCONOMIE",
+   q:"Quel agent économique collecte l'épargne et accorde des crédits ?",
+   c:["Les banques (institutions financières)","Les ménages","Les administrations publiques","Le reste du monde"],
+   ex:"Les banques et autres institutions financières collectent l'épargne des agents et prêtent à ceux qui ont besoin de financement."},
+  {ch:4, p:"IMPORTER ET EXPORTER AVEC LE RESTE DU MONDE",
+   q:"L'agent « reste du monde » désigne…",
+   c:["Les agents économiques étrangers","Les régions françaises","Les entreprises publiques","Les ménages sans emploi"],
+   ex:"Le reste du monde regroupe les agents situés à l'étranger avec lesquels les agents nationaux échangent (importations, exportations)."},
+  {ch:5, p:"LA RENCONTRE DE L'OFFRE ET DE LA DEMANDE",
+   q:"Comment appelle-t-on ce lieu, physique ou virtuel ?",
+   c:["Le marché","Le circuit économique","La chaîne de valeur","L'organigramme"],
+   ex:"Un marché est le lieu, réel ou virtuel, où se rencontrent l'offre et la demande d'un bien ou d'un service, ce qui détermine un prix."},
+  {ch:5, p:"UN SALAIRE VERSÉ EN ÉCHANGE DU TRAVAIL",
+   q:"Le salaire est un flux…",
+   c:["Monétaire","Réel","Physique","Non marchand"],
+   ex:"Le travail fourni par le salarié est un flux réel. Le salaire versé en contrepartie est un flux monétaire."},
+  {ch:5, p:"LE CIRCUIT ÉCONOMIQUE RELIE LES AGENTS",
+   q:"Le circuit économique représente…",
+   c:["Les flux échangés entre les agents économiques","L'organigramme d'une entreprise","Les étapes de fabrication d'un produit","Le parcours d'un client en magasin"],
+   ex:"Le circuit économique schématise les flux réels (biens, services, travail) et monétaires (salaires, achats, impôts) entre les agents."},
+  {ch:6, p:"UN ACCORD DE VOLONTÉS QUI CRÉE DES OBLIGATIONS",
+   q:"De quoi s'agit-il ?",
+   c:["Un contrat","Une loi","Un règlement intérieur","Une facture"],
+   ex:"Article 1101 du Code civil : le contrat est un accord de volontés entre deux ou plusieurs personnes destiné à créer, modifier, transmettre ou éteindre des obligations."},
+  {ch:6, p:"CHACUN EST LIBRE DE CONTRACTER OU NON",
+   q:"Quel principe est illustré ?",
+   c:["La liberté contractuelle","La force obligatoire du contrat","La responsabilité civile","L'obligation de résultat"],
+   ex:"Article 1102 du Code civil : chacun est libre de contracter ou non, de choisir son cocontractant et de fixer le contenu du contrat, dans les limites de la loi."},
+  {ch:6, p:"CONSENTEMENT, CAPACITÉ ET CONTENU LICITE",
+   q:"Que représentent ces trois éléments ?",
+   c:["Les conditions de validité d'un contrat","Les sanctions de l'inexécution","Les mentions d'une facture","Les étapes d'une vente"],
+   ex:"Article 1128 du Code civil : sont nécessaires à la validité d'un contrat le consentement des parties, leur capacité de contracter et un contenu licite et certain."},
+  {ch:7, p:"LE CONTRAT TIENT LIEU DE LOI ENTRE LES PARTIES",
+   q:"Quel principe est énoncé ?",
+   c:["La force obligatoire du contrat","La liberté contractuelle","L'obligation de moyens","La hiérarchie des normes"],
+   ex:"Article 1103 du Code civil : les contrats légalement formés tiennent lieu de loi à ceux qui les ont faits. Les parties doivent les respecter."},
+  {ch:7, p:"LE TRANSPORTEUR DOIT LIVRER LE COLIS INTACT",
+   q:"Le transporteur est tenu à une obligation…",
+   c:["De résultat","De moyens","De confidentialité","De non-concurrence"],
+   ex:"Obligation de résultat : le résultat promis doit être atteint (colis livré intact). Sinon, la responsabilité du transporteur est engagée."},
+  {ch:7, p:"LE MÉDECIN NE PEUT PAS PROMETTRE LA GUÉRISON",
+   q:"Le médecin est tenu à une obligation…",
+   c:["De moyens","De résultat","De livraison","De non-concurrence"],
+   ex:"Obligation de moyens : le médecin doit mettre en œuvre tous les moyens possibles (soins attentifs et conformes à la science), sans garantir le résultat."},
+  {ch:8, p:"LA COMMANDE N'A JAMAIS ÉTÉ LIVRÉE",
+   q:"Comment qualifie-t-on cette situation ?",
+   c:["Une inexécution du contrat","Une rétractation du client","Une offre de prix","Une rupture à l'amiable"],
+   ex:"Quand une partie ne fait pas ce qu'elle a promis, il y a inexécution du contrat. L'autre partie peut alors utiliser les sanctions de l'article 1217 du Code civil."},
+  {ch:8, p:"DEMANDER LA RÉSOLUTION DU CONTRAT",
+   q:"La résolution du contrat signifie que…",
+   c:["Le contrat prend fin","Le prix est réduit","Le contrat est prolongé","Le contrat est automatiquement renouvelé"],
+   ex:"La résolution met fin au contrat (article 1229 du Code civil). C'est l'une des sanctions de l'inexécution prévues par l'article 1217."},
+  {ch:8, p:"OBTENIR UNE RÉDUCTION DU PRIX",
+   q:"Cette sanction est possible lorsque le contrat a été…",
+   c:["Exécuté de façon imparfaite","Parfaitement exécuté","Annulé par le client","Payé en avance"],
+   ex:"Article 1223 du Code civil : en cas d'exécution imparfaite, le créancier peut accepter cette exécution et demander une réduction proportionnelle du prix."},
+  {ch:9, p:"INEXÉCUTION, DOMMAGE ET LIEN DE CAUSALITÉ",
+   q:"Ce sont les trois conditions…",
+   c:["De la responsabilité civile contractuelle","De validité d'un contrat","D'un licenciement","De la formation d'un contrat de vente"],
+   ex:"Pour engager la responsabilité civile contractuelle, il faut une inexécution du contrat, un dommage subi et un lien de causalité entre les deux."},
+  {ch:9, p:"LE CLIENT REÇOIT DES DOMMAGES ET INTÉRÊTS",
+   q:"Les dommages et intérêts servent à…",
+   c:["Réparer le préjudice subi","Punir pénalement le cocontractant","Annuler le contrat","Payer la TVA"],
+   ex:"Les dommages et intérêts sont une somme d'argent versée à la victime pour réparer le préjudice causé par l'inexécution du contrat."},
+
+  // ================= MODULE 2 =================
+  {ch:10, p:"ACHETER LES MATIÈRES PREMIÈRES AU BON PRIX",
+   q:"Quelle fonction de l'entreprise s'en charge ?",
+   c:["La fonction approvisionnement","La fonction commerciale","La fonction ressources humaines","La fonction financière"],
+   ex:"La fonction approvisionnement (achats) choisit les fournisseurs, négocie les prix et gère les stocks."},
+  {ch:10, p:"RECRUTER, FORMER ET RÉMUNÉRER LES SALARIÉS",
+   q:"Quelle fonction de l'entreprise s'en charge ?",
+   c:["La fonction ressources humaines","La fonction production","La fonction approvisionnement","La fonction commerciale"],
+   ex:"La fonction ressources humaines (RH) gère le personnel : recrutement, formation, rémunération, carrière."},
+  {ch:10, p:"LES FONCTIONS SUPPORT AIDENT LES AUTRES",
+   q:"Laquelle de ces activités est une fonction support ?",
+   c:["La comptabilité","La fabrication","La vente en magasin","L'assemblage des produits"],
+   ex:"Les fonctions support (comptabilité, informatique, juridique, RH…) ne produisent pas directement pour le client mais permettent aux autres fonctions de travailler."},
+  {ch:11, p:"L'ORGANIGRAMME MONTRE LA STRUCTURE",
+   q:"Que représente un organigramme ?",
+   c:["Les services et les liens hiérarchiques","Les comptes de l'entreprise","Les étapes de production","Le planning des congés"],
+   ex:"L'organigramme est le schéma de la structure : il montre les services, les postes et les liens d'autorité entre eux."},
+  {ch:11, p:"CHAQUE SALARIÉ N'A QU'UN SEUL CHEF",
+   q:"Quelle structure repose sur ce principe (unité de commandement) ?",
+   c:["La structure hiérarchique","La structure matricielle","La structure fonctionnelle","La structure en réseau"],
+   ex:"Dans la structure hiérarchique (ou linéaire), chaque salarié reçoit des ordres d'un seul supérieur. Dans la structure fonctionnelle, il peut avoir plusieurs chefs spécialisés."},
+  {ch:11, p:"DES DIVISIONS PAR PRODUIT OU PAR RÉGION",
+   q:"Quelle structure organise l'entreprise ainsi ?",
+   c:["La structure divisionnelle","La structure hiérarchique simple","La structure fonctionnelle","L'entreprise individuelle"],
+   ex:"La structure divisionnelle découpe l'entreprise en divisions autonomes, par produit, par marché ou par zone géographique."},
+  {ch:12, p:"QUAND LE PRIX MONTE, ON ACHÈTE MOINS",
+   q:"En général, quand le prix d'un produit augmente, la demande…",
+   c:["Diminue","Augmente","Reste toujours identique","Disparaît totalement"],
+   ex:"En règle générale, la demande varie en sens inverse du prix : plus le prix est élevé, moins les consommateurs achètent."},
+  {ch:12, p:"LANCEMENT, CROISSANCE, MATURITÉ, DÉCLIN",
+   q:"Ce sont les phases…",
+   c:["Du cycle de vie d'un produit","Du recrutement","D'un contrat de travail","De la chaîne de valeur"],
+   ex:"Le cycle de vie décrit l'évolution des ventes d'un produit, de son lancement à son déclin. L'entreprise adapte son offre à chaque phase."},
+  {ch:12, p:"L'OFFRE EST CE QUE L'ENTREPRISE PROPOSE",
+   q:"L'offre correspond…",
+   c:["Aux biens et services proposés à la vente","Aux besoins des consommateurs","Aux impôts payés par l'entreprise","Aux salaires versés"],
+   ex:"L'offre est la quantité de biens et de services que les entreprises proposent sur un marché. La demande est ce que les clients souhaitent acheter."},
+  {ch:13, p:"RÉDUIRE, RÉUTILISER ET RECYCLER",
+   q:"Quel modèle économique est illustré ?",
+   c:["L'économie circulaire","L'économie linéaire","L'obsolescence programmée","La production de masse"],
+   ex:"L'économie circulaire limite les déchets et la consommation de ressources. Elle s'oppose au modèle linéaire « extraire, fabriquer, consommer, jeter »."},
+  {ch:13, p:"UN SEUL INTERMÉDIAIRE AU MAXIMUM",
+   q:"Comment appelle-t-on ce mode de vente entre le producteur et le consommateur ?",
+   c:["Un circuit court","Un circuit long","Le dropshipping","La vente pyramidale"],
+   ex:"Un circuit court est une vente directe du producteur au consommateur, ou avec un seul intermédiaire au maximum (définition du ministère de l'Agriculture)."},
+  {ch:13, p:"LOUER L'USAGE PLUTÔT QUE VENDRE",
+   q:"Quelle évolution de l'offre est illustrée ?",
+   c:["La vente de l'usage (économie de la fonctionnalité)","La vente à perte","La vente forcée","La vente liée"],
+   ex:"Avec l'économie de la fonctionnalité, l'entreprise vend l'usage d'un bien (location de vélos, d'outils…) plutôt que le bien lui-même."},
+  {ch:13, p:"UNE NOUVEAUTÉ MISE SUR LE MARCHÉ",
+   q:"Comment appelle-t-on une nouveauté qui est réellement commercialisée ?",
+   c:["Une innovation","Un brevet","Une contrefaçon","Un prototype"],
+   ex:"Une invention devient une innovation lorsqu'elle est mise sur le marché. L'innovation peut concerner un produit, un procédé ou une organisation."},
+  {ch:14, p:"LE TRAVAIL ET LE CAPITAL",
+   q:"Comment appelle-t-on ces deux éléments ?",
+   c:["Les facteurs de production","Les consommations intermédiaires","Les flux monétaires","Les prélèvements obligatoires"],
+   ex:"Pour produire, l'entreprise combine deux facteurs de production : le travail (les salariés) et le capital (machines, locaux, matières…)."},
+  {ch:14, p:"LES MACHINES ET LES LOCAUX",
+   q:"Ils font partie du capital technique…",
+   c:["Fixe","Circulant","Financier","Humain"],
+   ex:"Le capital fixe (machines, locaux) sert pendant plusieurs cycles de production. Le capital circulant (matières premières) est transformé ou détruit au cours d'un seul cycle."},
+  {ch:14, p:"PRODUIRE PLUS EN UNE HEURE DE TRAVAIL",
+   q:"De quoi parle-t-on ?",
+   c:["D'une hausse de la productivité","D'une hausse des prix","D'une baisse de la demande","D'une externalisation"],
+   ex:"La productivité du travail = production ÷ quantité de travail (heures ou salariés). Produire plus avec le même temps, c'est être plus productif."},
+  {ch:15, p:"CONFIER LE NETTOYAGE À UNE AUTRE ENTREPRISE",
+   q:"Comment s'appelle ce choix ?",
+   c:["L'externalisation","L'intégration","La croissance interne","La délocalisation"],
+   ex:"Externaliser, c'est confier une activité à une entreprise extérieure (sous-traitance) pour se concentrer sur son métier principal."},
+  {ch:15, p:"LA CHAÎNE DE VALEUR DE L'ENTREPRISE",
+   q:"La chaîne de valeur décrit…",
+   c:["Les activités qui créent de la valeur pour le client","La liste des prix de vente","La hiérarchie des salariés","Le circuit de collecte des déchets"],
+   ex:"La chaîne de valeur présente l'ensemble des activités de l'entreprise (principales et de soutien) qui contribuent à créer de la valeur pour le client."},
+  {ch:15, p:"PRÉVOIR, PLANIFIER, LANCER, CONTRÔLER",
+   q:"Ce sont les étapes…",
+   c:["De la gestion de la production","D'un contrat de vente","Du cycle de vie d'un produit","D'un recrutement"],
+   ex:"Gérer la production, c'est prévoir les besoins, planifier les tâches, lancer la fabrication puis contrôler les quantités, les délais et la qualité."},
+  {ch:16, p:"PRODUIRE APRÈS LA COMMANDE DU CLIENT",
+   q:"Quel mode de production est décrit ?",
+   c:["La production à la commande (flux tirés)","La production sur stock (flux poussés)","La production de masse anticipée","La production en continu sans commande"],
+   ex:"En flux tirés, c'est la commande du client qui déclenche la production : peu de stocks, mais des délais à respecter."},
+  {ch:16, p:"FABRIQUER EN GRANDE SÉRIE AVANT DE VENDRE",
+   q:"Quel mode de production est décrit ?",
+   c:["La production sur stock (flux poussés)","La production à la commande (flux tirés)","La production unitaire","Le juste-à-temps"],
+   ex:"En flux poussés, l'entreprise produit à l'avance d'après ses prévisions de ventes, puis stocke : coûts réduits, mais risque d'invendus."},
+  {ch:16, p:"RACHETER UNE AUTRE ENTREPRISE",
+   q:"Il s'agit d'une croissance…",
+   c:["Externe","Interne","Organique","Négative"],
+   ex:"La croissance externe consiste à racheter ou fusionner avec d'autres entreprises. La croissance interne (ou organique) repose sur ses propres investissements."},
+  {ch:16, p:"ACHETER UNE NOUVELLE MACHINE",
+   q:"Pour l'entreprise, cet achat est…",
+   c:["Un investissement","Une consommation intermédiaire","Une charge de personnel","Une subvention"],
+   ex:"Un investissement est l'achat d'un bien durable (machine, local, logiciel) qui servira plusieurs années à la production."},
+  {ch:17, p:"POLITIQUE, ÉCONOMIQUE, SOCIOCULTUREL",
+   q:"Ces facteurs font partie de quelle analyse de l'environnement ?",
+   c:["L'analyse PESTEL","Le compte de résultat","Le cycle de vie du produit","L'organigramme"],
+   ex:"PESTEL : facteurs Politiques, Économiques, Socioculturels, Technologiques, Écologiques (environnementaux) et Légaux de l'environnement de l'entreprise."},
+  {ch:17, p:"UNE SEULE ENTREPRISE FACE À TOUS LES CLIENTS",
+   q:"Quelle structure de marché est décrite ?",
+   c:["Un monopole","Un oligopole","Une concurrence parfaite","Un monopsone"],
+   ex:"Monopole : un seul vendeur face à de nombreux acheteurs. Monopsone : un seul acheteur face à de nombreux vendeurs."},
+  {ch:17, p:"QUELQUES GRANDES ENTREPRISES DOMINENT",
+   q:"Quelle structure de marché est décrite ?",
+   c:["Un oligopole","Un monopole","Une concurrence atomistique","Un marché de producteurs locaux"],
+   ex:"Dans un oligopole, quelques grandes entreprises se partagent l'essentiel du marché (exemple : les opérateurs de téléphonie mobile)."},
+  {ch:18, p:"INTÉGRER L'ÉCOLOGIE ET LE SOCIAL",
+   q:"Quelle démarche de l'entreprise est décrite ?",
+   c:["La responsabilité sociétale des entreprises (RSE)","Le dumping social","La croissance externe","L'externalisation"],
+   ex:"La RSE consiste pour l'entreprise à intégrer volontairement des préoccupations sociales et environnementales dans ses activités et ses relations avec ses partenaires."},
+  {ch:18, p:"UN LABEL RASSURE LE CONSOMMATEUR",
+   q:"Lequel est un signe officiel de qualité en France ?",
+   c:["Le Label Rouge","Le code-barres","Le QR code","Le ticket de caisse"],
+   ex:"Le Label Rouge est un signe officiel de qualité. Labels et normes aident l'entreprise à prouver la qualité ou l'origine de ses produits."},
+  {ch:18, p:"SAISIR UNE OPPORTUNITÉ",
+   q:"Pour l'entreprise, une opportunité est…",
+   c:["Un élément extérieur favorable","Une force interne","Un élément extérieur défavorable","Une faiblesse interne"],
+   ex:"L'environnement présente des opportunités (favorables) et des menaces (défavorables). L'entreprise prend des décisions pour saisir les unes et contrer les autres."},
+
+  // ================= MODULE 3 =================
+  {ch:19, p:"LE LOYER NE CHANGE PAS AVEC LA PRODUCTION",
+   q:"Le loyer du local est une charge…",
+   c:["Fixe","Variable","Proportionnelle","Unitaire"],
+   ex:"Une charge fixe (loyer, assurance) ne varie pas avec la quantité produite ou vendue, à court terme."},
+  {ch:19, p:"LES MATIÈRES AUGMENTENT AVEC LA PRODUCTION",
+   q:"Ce sont des charges…",
+   c:["Variables","Fixes","De structure","Exceptionnelles"],
+   ex:"Une charge variable (matières premières, emballages) évolue avec la quantité produite. Les charges de structure sont, elles, des charges fixes."},
+  {ch:19, p:"ADDITIONNER TOUS LES COÛTS DU PRODUIT",
+   q:"Le total des coûts d'un produit jusqu'à sa vente s'appelle…",
+   c:["Le coût de revient","Le chiffre d'affaires","Le coût d'achat","Le prix de vente TTC"],
+   ex:"Le coût de revient regroupe tous les coûts supportés pour un produit : achat, production et distribution."},
+  {ch:20, p:"VENTES MOINS CONSOMMATIONS INTERMÉDIAIRES",
+   q:"Ce calcul permet d'obtenir…",
+   c:["La valeur ajoutée","Le résultat","Le coût de revient","Le revenu disponible"],
+   ex:"Valeur ajoutée = production (ou chiffre d'affaires) − consommations intermédiaires. C'est la richesse réellement créée par l'entreprise."},
+  {ch:20, p:"LA VALEUR AJOUTÉE EST LA RICHESSE CRÉÉE",
+   q:"Une boutique réalise 50 000 € de chiffre d'affaires et 30 000 € de consommations intermédiaires. Sa valeur ajoutée est de…",
+   c:["20 000 €","80 000 €","30 000 €","50 000 €"],
+   ex:"Calcul : 50 000 − 30 000 = 20 000 €."},
+  {ch:20, p:"LES SALARIÉS REÇOIVENT UNE PART DE LA VALEUR AJOUTÉE",
+   q:"Sous quelle forme ?",
+   c:["Les salaires","Les dividendes","Les intérêts","Les impôts"],
+   ex:"La valeur ajoutée est partagée : salaires (salariés), impôts (État), intérêts (banques), dividendes (associés) et autofinancement (entreprise)."},
+  {ch:20, p:"LES ASSOCIÉS TOUCHENT DES DIVIDENDES",
+   q:"Les dividendes sont…",
+   c:["Une part du bénéfice versée aux associés","Un impôt sur les sociétés","Un prêt bancaire","Une prime versée aux salariés"],
+   ex:"Les dividendes rémunèrent les associés (actionnaires) qui ont apporté des capitaux à l'entreprise."},
+  {ch:21, p:"PRIX DE VENTE FOIS QUANTITÉS VENDUES",
+   q:"Ce calcul permet d'obtenir…",
+   c:["Le chiffre d'affaires","Le bénéfice","La valeur ajoutée","Le coût variable"],
+   ex:"Chiffre d'affaires = prix de vente unitaire × quantités vendues."},
+  {ch:21, p:"LES PRODUITS DÉPASSENT LES CHARGES",
+   q:"L'entreprise réalise…",
+   c:["Un bénéfice","Une perte","Un chiffre d'affaires nul","Une valeur ajoutée négative"],
+   ex:"Résultat = produits − charges. S'il est positif, c'est un bénéfice ; s'il est négatif, c'est une perte."},
+  {ch:21, p:"LES CHARGES DÉPASSENT LES PRODUITS",
+   q:"Le résultat de l'entreprise est…",
+   c:["Une perte","Un bénéfice","Une marge","Un investissement"],
+   ex:"Quand les charges sont supérieures aux produits, le résultat est négatif : l'entreprise est en perte (déficit)."},
+  {ch:22, p:"LE PRIX QUE LA MAJORITÉ DES CLIENTS ACCEPTE",
+   q:"De quel prix s'agit-il ?",
+   c:["Le prix psychologique","Le coût de revient","Le prix plancher","Le prix de gros"],
+   ex:"Le prix psychologique (ou prix d'acceptabilité) est celui que le plus grand nombre de clients accepte de payer : ni trop cher, ni trop bon marché."},
+  {ch:22, p:"PRIX DE VENTE HORS TAXES MOINS LE COÛT",
+   q:"Ce calcul donne…",
+   c:["La marge","La TVA","Le chiffre d'affaires","La valeur ajoutée"],
+   ex:"Marge unitaire = prix de vente HT − coût (d'achat ou de revient). Elle doit couvrir les autres charges et dégager un bénéfice."},
+  {ch:22, p:"COMPARER SES PRIX AVEC LES CONCURRENTS",
+   q:"Pour fixer son prix, l'entreprise tient compte ici…",
+   c:["De la concurrence","Des impôts locaux","Du règlement intérieur","Du PIB"],
+   ex:"Le prix de vente se fixe en tenant compte de trois éléments : les coûts, la demande (ce que le client accepte de payer) et la concurrence."},
+  {ch:22, p:"LE PRIX TTC COMPREND LA TVA",
+   q:"En France métropolitaine, le taux normal de TVA est de…",
+   c:["20 %","5,5 %","10 %","2,1 %"],
+   ex:"Taux normal : 20 %. Taux réduits : 10 % et 5,5 %. Taux particulier : 2,1 % (economie.gouv.fr, 2026). Prix TTC = prix HT + TVA."},
+  {ch:22, p:"ÊTRE MOINS CHER QUE SES CONCURRENTS",
+   q:"De quelle compétitivité s'agit-il ?",
+   c:["La compétitivité-prix","La compétitivité hors prix","La compétitivité fiscale","La compétitivité sociale"],
+   ex:"Compétitivité-prix : vendre moins cher que les concurrents. Compétitivité hors prix : se démarquer par la qualité, l'innovation, le service ou l'image."},
+  {ch:23, p:"LE PIB MESURE LA RICHESSE PRODUITE",
+   q:"Pour calculer le PIB, on additionne principalement…",
+   c:["Les valeurs ajoutées","Les salaires uniquement","Les exportations","Les dépenses de l'État"],
+   ex:"Le PIB est la somme des valeurs ajoutées produites sur le territoire pendant une année (plus les impôts sur les produits, moins les subventions sur les produits)."},
+  {ch:23, p:"SANTÉ, ÉDUCATION ET NIVEAU DE VIE",
+   q:"Ces trois dimensions composent…",
+   c:["L'indice de développement humain (IDH)","Le produit intérieur brut (PIB)","L'indice des prix","Le taux de chômage"],
+   ex:"L'IDH, calculé par le PNUD, combine l'espérance de vie, le niveau d'éducation et le revenu par habitant. Il complète le PIB."},
+  {ch:23, p:"LE BÉNÉVOLAT NE COMPTE PAS DANS LE PIB",
+   q:"Cet exemple illustre…",
+   c:["Une limite du PIB","Un mode de calcul de l'IDH","Une forme d'épargne","Une hausse du pouvoir d'achat"],
+   ex:"Le PIB ne mesure pas le bénévolat, le travail domestique ou les dégâts sur l'environnement : ce sont ses limites."},
+  {ch:24, p:"LES IMPÔTS ET LES COTISATIONS SOCIALES",
+   q:"Ensemble, on les appelle…",
+   c:["Les prélèvements obligatoires","Les revenus primaires","Les prestations sociales","Les dividendes"],
+   ex:"Les prélèvements obligatoires (impôts et cotisations sociales) financent l'action de l'État, des collectivités et de la protection sociale."},
+  {ch:24, p:"DES ALLOCATIONS POUR AIDER LES FAMILLES",
+   q:"Ces allocations sont une forme de…",
+   c:["Redistribution","Revenu du travail","Revenu du capital","Prélèvement obligatoire"],
+   ex:"Les prestations sociales (allocations familiales, aides au logement…) redistribuent une partie de la richesse vers les ménages qui en ont besoin."},
+  {ch:24, p:"LA SÉCURITÉ SOCIALE COUVRE LA VIEILLESSE",
+   q:"Le risque « vieillesse » correspond…",
+   c:["À la retraite","Au chômage","Au logement","À la famille"],
+   ex:"La protection sociale couvre plusieurs risques : maladie, vieillesse (retraite), famille, accidents du travail, chômage…"},
+  {ch:24, p:"REVENUS PLUS PRESTATIONS MOINS PRÉLÈVEMENTS",
+   q:"Ce calcul donne…",
+   c:["Le revenu disponible","Le PIB","La valeur ajoutée","Le revenu primaire"],
+   ex:"Revenu disponible = revenus primaires + prestations sociales − prélèvements obligatoires. C'est ce que le ménage peut consommer ou épargner."},
+  {ch:25, p:"LE LOYER ET L'ABONNEMENT INTERNET",
+   q:"Ce sont des dépenses…",
+   c:["Pré-engagées","Facultatives","Exceptionnelles","D'investissement"],
+   ex:"Les dépenses pré-engagées sont fixées à l'avance par contrat et difficiles à réduire à court terme : logement, abonnements, assurances…"},
+  {ch:25, p:"LA PART D'UNE DÉPENSE DANS LE BUDGET",
+   q:"Comment l'appelle-t-on ?",
+   c:["Le coefficient budgétaire","Le taux d'épargne","Le pouvoir d'achat","Le taux de TVA"],
+   ex:"Coefficient budgétaire = (dépense d'un poste ÷ dépenses totales) × 100."},
+  {ch:25, p:"CALCULER LA PART DE L'ALIMENTATION",
+   q:"Un ménage dépense 600 € en alimentation sur 2 400 € de dépenses totales. Le coefficient budgétaire de l'alimentation est de…",
+   c:["25 %","40 %","4 %","60 %"],
+   ex:"Calcul : 600 ÷ 2 400 × 100 = 25 %."},
+  {ch:25, p:"LES PRIX MONTENT PLUS VITE QUE LES REVENUS",
+   q:"Dans ce cas, le pouvoir d'achat…",
+   c:["Baisse","Augmente","Ne change pas","Double"],
+   ex:"Le pouvoir d'achat est la quantité de biens et services qu'un revenu permet d'acheter. Si les prix augmentent plus vite que les revenus, il baisse."},
+  {ch:25, p:"PAYER LA TOTALITÉ AU MOMENT DE L'ACHAT",
+   q:"C'est un paiement…",
+   c:["Comptant","À crédit","En location avec option d'achat","Différé"],
+   ex:"Paiement comptant : le client paie tout immédiatement. Le crédit et la LOA étalent le paiement dans le temps, avec un coût."},
+  {ch:26, p:"LOUER UNE VOITURE AVEC OPTION D'ACHAT",
+   q:"Comment s'appelle ce mode de financement ?",
+   c:["La LOA","Le crédit immobilier","Le paiement comptant","Le livret A"],
+   ex:"La LOA (location avec option d'achat) : on paie des loyers et on peut acheter le bien à la fin du contrat."},
+  {ch:26, p:"ACHETER DES VÊTEMENTS DE SECONDE MAIN",
+   q:"Ce comportement illustre…",
+   c:["Une consommation plus responsable","Une consommation ostentatoire","Une hausse des dépenses pré-engagées","Une production à la commande"],
+   ex:"L'achat d'occasion, la location ou la réparation sont des formes de consommation plus responsables, qui se développent."},
+  {ch:26, p:"COMMANDER EN LIGNE DEPUIS SON CANAPÉ",
+   q:"Quelle évolution des modes de consommation est illustrée ?",
+   c:["Le développement du commerce en ligne","Le retour du troc","La production sur stock","L'économie souterraine"],
+   ex:"Le numérique a développé le commerce en ligne (e-commerce), le click and collect et la livraison à domicile."},
+  {ch:27, p:"L'ÉPARGNE EST LA PART NON CONSOMMÉE",
+   q:"L'épargne est égale à…",
+   c:["Revenu disponible − consommation","Revenu disponible + consommation","Salaire brut − salaire net","Consommation − revenu disponible"],
+   ex:"Épargne = revenu disponible − consommation. Taux d'épargne = épargne ÷ revenu disponible × 100."},
+  {ch:27, p:"METTRE DE L'ARGENT DE CÔTÉ EN CAS DE COUP DUR",
+   q:"De quelle épargne s'agit-il ?",
+   c:["L'épargne de précaution","L'épargne en actions","L'épargne salariale","L'investissement"],
+   ex:"L'épargne de précaution permet de faire face aux imprévus (panne, perte d'emploi). Elle est placée sur des supports disponibles et sans risque."},
+  {ch:27, p:"LE LIVRET A EST UNE ÉPARGNE DISPONIBLE",
+   q:"Les intérêts du livret A sont…",
+   c:["Exonérés d'impôt","Imposés à 50 %","Versés par l'employeur","Fixés par chaque client"],
+   ex:"Le livret A est une épargne réglementée : l'argent reste disponible, le taux est fixé par l'État et les intérêts ne sont pas imposés."},
+  {ch:27, p:"ACHETER DES ACTIONS EN BOURSE",
+   q:"Ce type d'épargne présente…",
+   c:["Un risque de perte en capital","Une garantie totale du capital","Un taux fixé par l'État","Aucun rendement possible"],
+   ex:"Les actions peuvent rapporter davantage (dividendes, plus-values), mais leur valeur peut baisser : on peut perdre une partie du capital placé."},
+
+  // ================= MODULE 4 =================
+  {ch:28, p:"TRAVAILLER DEPUIS CHEZ SOI GRÂCE AU NUMÉRIQUE",
+   q:"Comment s'appelle cette forme de travail ?",
+   c:["Le télétravail","Le travail de nuit","L'intérim","Le temps partiel"],
+   ex:"Le télétravail permet de travailler hors des locaux de l'employeur grâce aux outils numériques."},
+  {ch:28, p:"ADAPTER LES HORAIRES À L'ACTIVITÉ",
+   q:"Quelle notion est illustrée ?",
+   c:["La flexibilité","La productivité","La hiérarchie","La redistribution"],
+   ex:"La flexibilité est la capacité de l'entreprise à adapter le travail (horaires, effectifs, organisation) aux variations de son activité."},
+  {ch:28, p:"LE NUMÉRIQUE TRANSFORME LES MÉTIERS",
+   q:"Lequel est un effet du numérique dans un magasin ?",
+   c:["Les caisses automatiques","Le paiement en espèces","Le catalogue papier","Le carnet de commandes manuscrit"],
+   ex:"Caisses automatiques, étiquettes électroniques, tablettes de vente : le numérique modifie les tâches et les compétences demandées aux salariés."},
+  {ch:29, p:"LIVRER DES REPAS VIA UNE APPLICATION",
+   q:"En France, ces livreurs travaillent souvent sous le statut…",
+   c:["D'indépendant (micro-entrepreneur)","De fonctionnaire","D'apprenti","De salarié en CDI"],
+   ex:"Beaucoup sont micro-entrepreneurs. Mais s'il existe un lien de subordination, le juge peut requalifier la relation en contrat de travail."},
+  {ch:29, p:"METTRE EN RELATION CLIENTS ET PRESTATAIRES",
+   q:"Comment s'appelle ce type d'entreprise ?",
+   c:["Une plateforme collaborative","Une coopérative agricole","Une agence d'intérim","Une administration publique"],
+   ex:"Les plateformes numériques mettent en relation des clients et des prestataires (transport, livraison, services entre particuliers…)."},
+  {ch:29, p:"LE FREELANCE TRAVAILLE POUR PLUSIEURS CLIENTS",
+   q:"Le freelance est…",
+   c:["Un travailleur indépendant","Un salarié en CDD","Un stagiaire","Un intérimaire"],
+   ex:"Le freelance est un travailleur indépendant : il choisit ses clients, fixe ses tarifs et organise librement son travail."},
+  {ch:30, p:"NE PAS LIRE SES MAILS PENDANT SES CONGÉS",
+   q:"Quel droit protège le salarié ?",
+   c:["Le droit à la déconnexion","Le droit de grève","Le droit de retrait","Le droit à l'image"],
+   ex:"Le droit à la déconnexion vient de la loi du 8 août 2016 et s'applique depuis le 1er janvier 2017. Les entreprises d'au moins 50 salariés doivent le négocier."},
+  {ch:30, p:"VIE PRIVÉE ET VIE PRO SE MÉLANGENT",
+   q:"Comment appelle-t-on ce risque lié au numérique ?",
+   c:["Le brouillage des frontières","L'externalisation","La croissance interne","La rupture conventionnelle"],
+   ex:"Avec les mails et messageries sur smartphone, la frontière entre vie privée et vie professionnelle devient floue : c'est le brouillage des frontières."},
+  {ch:30, p:"RECEVOIR TROP DE MESSAGES CHAQUE JOUR",
+   q:"Comment appelle-t-on ce risque ?",
+   c:["La surcharge informationnelle (infobésité)","Le droit à la déconnexion","La veille commerciale","Le télétravail"],
+   ex:"La surcharge informationnelle fatigue, disperse l'attention et peut nuire à la santé et à l'efficacité au travail."},
+  {ch:31, p:"LE SALARIÉ TRAVAILLE SOUS L'AUTORITÉ DE SON EMPLOYEUR",
+   q:"Comment s'appelle ce lien ?",
+   c:["Le lien de subordination","Le lien de causalité","Le lien de parenté","Le lien commercial"],
+   ex:"Le lien de subordination : l'employeur donne des ordres, contrôle le travail et peut sanctionner. C'est ce qui distingue le salarié de l'indépendant."},
+  {ch:31, p:"PRESTATION, RÉMUNÉRATION, SUBORDINATION",
+   q:"Ce sont les trois éléments…",
+   c:["Du contrat de travail","Du contrat de vente","De la responsabilité civile","Du calcul du PIB"],
+   ex:"Il y a contrat de travail quand une personne fournit un travail, contre une rémunération, sous l'autorité d'un employeur."},
+  {ch:31, p:"L'INDÉPENDANT SIGNE UN CONTRAT DE PRESTATION",
+   q:"Le travailleur indépendant…",
+   c:["Organise librement son travail et choisit ses clients","Reçoit un bulletin de paie","A droit à des congés payés","Dépend d'un supérieur hiérarchique"],
+   ex:"L'indépendant n'a pas d'employeur : il facture ses prestations à ses clients et assume les risques de son activité."},
+  {ch:32, p:"LE CDI EST LA FORME NORMALE DU CONTRAT",
+   q:"Que signifie CDI ?",
+   c:["Contrat à durée indéterminée","Contrat de droit international","Contrat à durée imposée","Contrat de développement individuel"],
+   ex:"Article L1221-2 du Code du travail : le CDI est la forme normale et générale de la relation de travail."},
+  {ch:32, p:"REMPLACER UNE SALARIÉE EN CONGÉ MATERNITÉ",
+   q:"Quel contrat l'employeur peut-il proposer ?",
+   c:["Un CDD de remplacement","Obligatoirement un CDI","Un contrat de prestation","Une convention de stage"],
+   ex:"Le CDD ne peut être conclu que dans des cas prévus par la loi : remplacement d'un salarié absent, accroissement temporaire d'activité, emploi saisonnier…"},
+  {ch:32, p:"UN CDD A UNE DURÉE LIMITÉE",
+   q:"Dans le cas général, la durée maximale d'un CDD, renouvellements compris, est de…",
+   c:["18 mois","6 mois","5 ans","Il n'y a pas de limite"],
+   ex:"Cas général : 18 mois renouvellements compris, sauf accord de branche (9 ou 24 mois dans certains cas). Source : service-public.gouv.fr."},
+  {ch:32, p:"L'INTÉRIMAIRE EST SALARIÉ DE L'AGENCE",
+   q:"Combien de parties sont liées dans le travail temporaire (intérim) ?",
+   c:["Trois","Deux","Une","Quatre"],
+   ex:"L'intérim est une relation à trois : le salarié intérimaire, l'entreprise de travail temporaire (son employeur) et l'entreprise utilisatrice."},
+  {ch:33, p:"LA DURÉE LÉGALE EST DE 35 HEURES",
+   q:"Au-delà de la durée légale, les heures travaillées sont…",
+   c:["Des heures supplémentaires majorées","Des heures non payées","Des jours de congés payés","Des heures de formation"],
+   ex:"Les heures au-delà de 35 h par semaine sont des heures supplémentaires, payées avec une majoration (25 % pour les 8 premières, sauf accord)."},
+  {ch:33, p:"LA CONVENTION COLLECTIVE DU COMMERCE",
+   q:"Une convention collective est…",
+   c:["Un accord négocié entre employeurs et syndicats de salariés","Une loi votée par le Parlement","Un contrat entre un vendeur et un client","Un arrêté du maire"],
+   ex:"La convention collective adapte le Code du travail à un secteur : salaires minimaux, primes, congés… Elle est négociée par les partenaires sociaux."},
+  {ch:33, p:"LE RÈGLEMENT INTÉRIEUR FIXE LES RÈGLES",
+   q:"Il est obligatoire dans les entreprises d'au moins…",
+   c:["50 salariés","1 salarié","11 salariés","250 salariés"],
+   ex:"Depuis le 1er janvier 2020, le règlement intérieur est obligatoire à partir de 50 salariés (après 12 mois consécutifs). Il fixe hygiène, sécurité et discipline."},
+  {ch:33, p:"LE CONTRAT DOIT RESPECTER LA LOI",
+   q:"Quel principe est illustré ?",
+   c:["La hiérarchie des normes","La liberté d'entreprendre","La force majeure","La flexibilité"],
+   ex:"Une règle doit respecter les règles supérieures : Constitution, traités, lois, règlements, conventions collectives, puis contrat de travail."},
+  {ch:34, p:"FOURNIR LE TRAVAIL ET VERSER LE SALAIRE",
+   q:"Ce sont des obligations…",
+   c:["De l'employeur","Du salarié","Du client","De l'État"],
+   ex:"L'employeur doit fournir le travail, payer le salaire, respecter le droit du travail et protéger la santé et la sécurité des salariés."},
+  {ch:34, p:"RESPECTER LES CONSIGNES ET LES HORAIRES",
+   q:"C'est une obligation…",
+   c:["Du salarié","De l'employeur","Du client","De l'inspection du travail"],
+   ex:"Le salarié doit exécuter son travail, respecter les consignes et le règlement intérieur, et être loyal envers son employeur."},
+  {ch:34, p:"LE BULLETIN DE PAIE DÉTAILLE LE SALAIRE",
+   q:"Le salaire net est égal…",
+   c:["Au salaire brut moins les cotisations salariales","Au salaire brut plus les primes","Au coût total pour l'employeur","Au salaire avant cotisations"],
+   ex:"Salaire net = salaire brut − cotisations et contributions salariales. Le bulletin de paie doit être remis à chaque versement du salaire."},
+  {ch:34, p:"DEUX JOURS ET DEMI DE CONGÉS PAR MOIS",
+   q:"Pour une année complète de travail, cela fait…",
+   c:["5 semaines","3 semaines","4 semaines","6 semaines"],
+   ex:"2,5 jours ouvrables × 12 mois = 30 jours ouvrables, soit 5 semaines (Code du travail, article L3141-3)."},
+  {ch:34, p:"LE CSE REPRÉSENTE LES SALARIÉS",
+   q:"Que signifie CSE ?",
+   c:["Comité social et économique","Conseil supérieur de l'emploi","Contrat de sécurité de l'emploi","Caisse sociale des entreprises"],
+   ex:"Le CSE est l'instance de représentation du personnel, obligatoire dans les entreprises d'au moins 11 salariés."},
+  {ch:35, p:"LE SALARIÉ DÉCIDE DE QUITTER SON EMPLOI",
+   q:"Comment s'appelle cette rupture du CDI ?",
+   c:["Une démission","Un licenciement","Une rupture conventionnelle","Une mise à pied"],
+   ex:"La démission est la rupture du CDI à l'initiative du salarié. Il doit en principe respecter un préavis."},
+  {ch:35, p:"ROMPRE LE CDI D'UN COMMUN ACCORD",
+   q:"Quel mode de rupture est décrit ?",
+   c:["La rupture conventionnelle","La démission","Le licenciement économique","La fin de la période d'essai"],
+   ex:"La rupture conventionnelle permet à l'employeur et au salarié de mettre fin au CDI d'un commun accord, avec une indemnité."},
+  {ch:35, p:"DES DIFFICULTÉS ÉCONOMIQUES SÉRIEUSES",
+   q:"Un licenciement causé par de graves difficultés financières de l'entreprise est un licenciement…",
+   c:["Pour motif économique","Pour motif personnel","Pour faute grave","Disciplinaire"],
+   ex:"Le licenciement pour motif économique n'est pas lié à la personne du salarié, mais à la situation de l'entreprise (difficultés, mutations technologiques…)."},
+  {ch:35, p:"LE CERTIFICAT DE TRAVAIL ET LE SOLDE DE TOUT COMPTE",
+   q:"Quand l'employeur remet-il ces documents ?",
+   c:["À la fin du contrat de travail","À l'embauche","À chaque fin de mois","Lors de l'entretien annuel"],
+   ex:"À la fin du contrat, l'employeur remet le certificat de travail, le reçu pour solde de tout compte et l'attestation France Travail."},
+  {ch:36, p:"SE FORMER APRÈS AVOIR QUITTÉ L'ÉCOLE",
+   q:"La formation suivie par un adulte qui travaille s'appelle…",
+   c:["La formation continue","La formation initiale","La scolarité obligatoire","Le service civique"],
+   ex:"La formation initiale se fait avant l'entrée dans la vie active (lycée, apprentissage). La formation continue se fait tout au long de la vie professionnelle."},
+  {ch:36, p:"FAIRE RECONNAÎTRE SON EXPÉRIENCE",
+   q:"Quel dispositif permet d'obtenir un diplôme grâce à son expérience ?",
+   c:["La VAE (validation des acquis de l'expérience)","Le CPF","Le contrat d'apprentissage","Le bilan de compétences"],
+   ex:"La VAE permet d'obtenir tout ou partie d'un diplôme ou d'une certification grâce à l'expérience professionnelle ou bénévole."},
+  {ch:36, p:"ALTERNER COURS ET ENTREPRISE COMME SALARIÉ",
+   q:"Quel contrat permet de préparer un diplôme en alternance ?",
+   c:["Le contrat d'apprentissage","Le contrat de prestation","Le contrat d'intérim","Le CDD de remplacement"],
+   ex:"L'apprenti est un salarié : il alterne formation en CFA et travail en entreprise. Le contrat de professionnalisation repose aussi sur l'alternance."},
+  {ch:36, p:"SE FORMER POUR S'ADAPTER AUX MÉTIERS",
+   q:"Pour un salarié, un enjeu de la formation tout au long de la vie est de…",
+   c:["Rester employable et évoluer","Perdre ses droits","Réduire son salaire","Éviter les congés"],
+   ex:"Se former permet de s'adapter aux évolutions des métiers (numérique…), d'évoluer dans sa carrière ou de se reconvertir."},
+  {ch:37, p:"LE CPF EST CRÉDITÉ EN EUROS",
+   q:"Pour un salarié au moins à mi-temps, combien le CPF reçoit-il par an ?",
+   c:["500 €","100 €","1 500 €","5 000 €"],
+   ex:"500 € par an dans la limite de 5 000 € (800 € et 8 000 € pour les salariés peu qualifiés). Source : service-public.gouv.fr."},
+  {ch:37, p:"LES DROITS DU CPF SUIVENT LE SALARIÉ",
+   q:"Quand on change d'employeur, les droits du CPF…",
+   c:["Sont conservés","Sont remis à zéro","Sont versés en salaire","Restent à l'ancien employeur"],
+   ex:"Les droits du CPF sont attachés à la personne : ils la suivent tout au long de sa vie professionnelle (portabilité des droits)."},
+  {ch:37, p:"LE PLAN DE DÉVELOPPEMENT DES COMPÉTENCES",
+   q:"Ce plan regroupe…",
+   c:["Les formations décidées par l'employeur","Les augmentations de salaire","Les recrutements de l'année","Les congés des salariés"],
+   ex:"Le plan de développement des compétences rassemble les formations que l'employeur organise pour ses salariés."},
+  {ch:37, p:"FAIRE LE POINT SUR SES COMPÉTENCES",
+   q:"Quel dispositif permet d'analyser ses compétences et de construire un projet professionnel ?",
+   c:["Le bilan de compétences","La rupture conventionnelle","La période d'essai","Le règlement intérieur"],
+   ex:"Le bilan de compétences aide à analyser ses compétences, ses aptitudes et ses motivations pour définir un projet professionnel."}
+];
+/*END*/
+const QOF = {}; QUESTIONS.forEach(x => x.chaps.forEach(ch => QOF[ch] = x));
+const PUZZLES = RAW.map(z => {
+  const Q = QOF[z.ch];
+  return { ...z, mod: Q.mod, pool: LEVEL_OF_MODULE[Q.mod], bloc: MODULES[Q.mod], question: Q.q, cat: CHAPS[z.ch] };
+});
+
+
+/* ======================================================================
+   RÉGLAGES DU JEU
+   ====================================================================== */
+const VOWEL_COST = 250, SOLVE_PRIME = 300, BONUS_PTS = 500, COLS = 14, ROWS = 4;
+const VOWELS = new Set(["A","E","I","O","U","Y"]);
+const TEAM_COLORS = ["#ff7b72","#5cb8ff","#a3e635","#c4a7ff","#ffb05c","#ff8fc1"];
+const TEAM_NAMES = ["Équipe 1","Équipe 2","Équipe 3","Équipe 4","Équipe 5","Équipe 6"];
+const SEG_COLORS = ["#e63946","#f4a261","#2a9d8f","#e9c46a","#3a86ff","#8ac926","#ff70a6","#7b5cd6"];
+const WHEEL = [
+  {t:"v",v:500},{t:"v",v:200},{t:"v",v:350},{t:"bk"},{t:"v",v:150},{t:"v",v:600},{t:"v",v:250},{t:"ps"},
+  {t:"v",v:400},{t:"v",v:800},{t:"v",v:100},{t:"ex"},{t:"v",v:300},{t:"jp",v:1500},{t:"v",v:450},{t:"v",v:200},{t:"v",v:700}
+].map((s,i)=>{
+  if(s.t==="bk") return {...s, bg:"#0d0d10", fg:"#ffffff", label:"BANQUEROUTE"};
+  if(s.t==="ps") return {...s, bg:"#f4f4f6", fg:"#14182a", label:"PASSE"};
+  if(s.t==="jp") return {...s, bg:"#ffd23f", fg:"#3a2400", label:"1500"};
+  if(s.t==="ex") return {...s, bg:"#6a1b9a", fg:"#ffffff", label:"ÉCHANGE"};
+  const bg = SEG_COLORS[i % SEG_COLORS.length];
+  const light = ["#e9c46a","#f4a261","#8ac926"].includes(bg);
+  return {...s, bg, fg: light ? "#1a1406" : "#ffffff", label:String(s.v)};
+});
+const REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ======================================================================
+   OUTILS
+   ====================================================================== */
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, REDUCE ? Math.min(ms, 300) : ms));
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
+const lettersOnly = s => norm(s).replace(/[^A-Z0-9]/g, "");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => n.toLocaleString("fr-FR");
+const signed = n => (n>0?"+":n<0?"−":"") + fmt(Math.abs(n));
+const mod = (a, n) => ((a % n) + n) % n;
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function wrapPhrase(p){
+  const words = norm(p).split(" "); const rows = []; let cur = "";
+  for(const w of words){ if(!cur) cur = w; else if((cur+" "+w).length <= COLS) cur += " "+w; else { rows.push(cur); cur = w; } }
+  if(cur) rows.push(cur); return rows;
+}
+
+/* ======================================================================
+   SONS (Web Audio, tous synthétisés)
+   ====================================================================== */
+let AC = null, master = null, noiseBuf = null;
+function initAudio(){
+  try{
+    if(!AC){
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      master = AC.createGain(); master.gain.value = 0.75; master.connect(AC.destination);
+      const len = AC.sampleRate * 2; noiseBuf = AC.createBuffer(1, len, AC.sampleRate);
+      const d = noiseBuf.getChannelData(0); for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+    }
+    if(AC.state === "suspended") AC.resume();
+  }catch(e){ AC = null; }
+}
+const canPlay = () => S.sound && AC;
+function env(g, t, a, peak, dec){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(peak,0.0002), t+a); g.gain.exponentialRampToValueAtTime(0.0001, t+a+dec); }
+function tone(f, type, t, dur, peak=0.3){ const o=AC.createOscillator(), g=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); env(g,t,0.006,peak,dur); o.connect(g).connect(master); o.start(t); o.stop(t+dur+0.1); return o; }
+function brass(f, t, dur, peak=0.18){ const o=AC.createOscillator(), o2=AC.createOscillator(), fl=AC.createBiquadFilter(), g=AC.createGain(); o.type="sawtooth"; o2.type="sawtooth"; o.frequency.value=f; o2.frequency.value=f*1.004; fl.type="lowpass"; fl.frequency.setValueAtTime(600,t); fl.frequency.linearRampToValueAtTime(3200,t+0.08); fl.frequency.linearRampToValueAtTime(1800,t+dur); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+0.04); g.gain.setValueAtTime(peak,t+dur*0.7); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(fl); o2.connect(fl); fl.connect(g).connect(master); o.start(t); o2.start(t); o.stop(t+dur+0.05); o2.stop(t+dur+0.05); }
+function noise(t, dur, peak, type, freq, q=1){ const s=AC.createBufferSource(); s.buffer=noiseBuf; const f=AC.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q; const g=AC.createGain(); env(g,t,0.002,peak,dur); s.connect(f).connect(g).connect(master); s.start(t, Math.random()*1.5); s.stop(t+dur+0.05); }
+const SFX = {
+  tick(){ if(!canPlay()) return; const t=AC.currentTime; noise(t,0.025,0.55,"bandpass",3000,3); tone(1700,"square",t,0.015,0.04); },
+  ding(){ if(!canPlay()) return; const t=AC.currentTime; tone(1318.5,"sine",t,1.2,0.22); tone(2637,"sine",t,0.6,0.06); tone(1976,"triangle",t,0.9,0.05); },
+  softDing(){ if(!canPlay()) return; const t=AC.currentTime; tone(1568,"sine",t,0.35,0.08); },
+  coins(){ if(!canPlay()) return; const t=AC.currentTime; [1568,2093,2637].forEach((f,i)=>tone(f,"triangle",t+i*0.07,0.25,0.1)); },
+  buzz(){ if(!canPlay()) return; const t=AC.currentTime; tone(92,"sawtooth",t,0.75,0.22); tone(97,"square",t,0.75,0.1); },
+  bankrupt(){ if(!canPlay()) return; const t=AC.currentTime; [392,370,349,330].forEach((f,i)=>{ const d=i===3?1.3:0.42; brass(f,t+i*0.45,d,0.2); }); },
+  fanfare(){ if(!canPlay()) return; const t=AC.currentTime; [[523.25,0],[659.25,.13],[783.99,.26],[1046.5,.39]].forEach(([f,d])=>brass(f,t+d,0.22,0.17)); [523.25,659.25,783.99,1046.5].forEach(f=>brass(f,t+0.6,1.3,0.1)); noise(t+0.6,1.4,0.12,"highpass",6000,0.5); },
+  jingle(){ if(!canPlay()) return; const t=AC.currentTime; [659.25,783.99,987.77,1318.5].forEach((f,i)=>{ tone(f,"triangle",t+i*0.09,0.35,0.16); tone(f*2,"sine",t+i*0.09,0.2,0.04); }); },
+  swap(){ if(!canPlay()) return; const t=AC.currentTime; [880,660,880,660,1175].forEach((f,i)=>tone(f,"square",t+i*0.09,0.12,0.06)); },
+  whoosh(){ if(!canPlay()) return; const t=AC.currentTime; const s=AC.createBufferSource(); s.buffer=noiseBuf; const f=AC.createBiquadFilter(); f.type="bandpass"; f.Q.value=1.2; f.frequency.setValueAtTime(300,t); f.frequency.exponentialRampToValueAtTime(2400,t+0.5); const g=AC.createGain(); env(g,t,0.15,0.25,0.5); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t+0.8); },
+  timer(){ if(!canPlay()) return; const t=AC.currentTime; tone(880,"square",t,0.05,0.05); },
+  applause(dur=3.5){
+    if(!canPlay()) return; const t0=AC.currentTime; const n=Math.round(dur*55);
+    for(let i=0;i<n;i++){
+      const r=Math.random(); const tc=t0+r*dur;
+      const envA = Math.min(1, (r*dur)/0.35) * Math.min(1, (dur-r*dur)/1.2);
+      noise(tc, 0.015+Math.random()*0.035, (0.12+Math.random()*0.22)*Math.max(envA,0.05), "bandpass", 800+Math.random()*2400, 0.9);
+    }
+    const s=AC.createBufferSource(); s.buffer=noiseBuf; s.loop=true; const f=AC.createBiquadFilter(); f.type="bandpass"; f.frequency.value=1400; f.Q.value=0.4; const g=AC.createGain();
+    g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.06,t0+0.4); g.gain.setValueAtTime(0.06,t0+dur-1.2); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    s.connect(f).connect(g).connect(master); s.start(t0); s.stop(t0+dur+0.1);
+  },
+  drumroll(dur=2.6){ if(!canPlay()) return; const t0=AC.currentTime; for(let x=0;x<dur;x+=0.04){ const a=0.06+0.3*(x/dur); noise(t0+x,0.06,a,"bandpass",1700,0.8); noise(t0+x,0.05,a*0.5,"lowpass",300,0.7); } },
+  crash(){ if(!canPlay()) return; const t=AC.currentTime; noise(t,2.4,0.4,"highpass",4500,0.4); noise(t,0.4,0.5,"lowpass",180,0.7); tone(65,"sine",t,0.6,0.4); }
+};
+
+/* ======================================================================
+   ÉTAT
+   ====================================================================== */
+const S = {
+  pools: new Set(["2de"]), nTeams: 4, names: TEAM_NAMES.slice(), nManches: 5, timer: 30, swapMode: "take",
+  teams: [], deck: [], mIndex: 0, cur: 0, puzzle: null, tiles: [], used: new Set(),
+  mode: "idle", wheelVal: 0, sound: true, rot: 0, miniRot: 0, spinning: false, potShown: 0
+};
+
+/* ======================================================================
+   ÉCRAN DE CONFIGURATION
+   ====================================================================== */
+function renderPools(){
+  $("#pools").innerHTML = Object.entries(POOLS).map(([k,p])=>{
+    const n = PUZZLES.filter(z=>z.pool===k).length;
+    return `<label class="pool"><input type="checkbox" id="pool-${k}" data-pool="${k}" ${S.pools.has(k)?"checked":""}>
+      <span><b>${esc(p.label)}</b><small>${esc(p.sub)}</small><span class="count">${n} phrases</span></span></label>`;
+  }).join("");
+  $("#pools").querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{
+    inp.checked ? S.pools.add(inp.dataset.pool) : S.pools.delete(inp.dataset.pool);
+    syncManches();
+  }));
+}
+function renderTeamInputs(){
+  $("#teamCount").textContent = S.nTeams;
+  $("#teamInputs").innerHTML = Array.from({length:S.nTeams},(_,i)=>
+    `<label class="team-input"><i style="background:${TEAM_COLORS[i]}"></i><input type="text" id="team-name-${i}" maxlength="24" value="${esc(S.names[i])}" aria-label="Nom de l'équipe ${i+1}"></label>`).join("");
+  $("#teamInputs").querySelectorAll("input").forEach((inp,i)=>inp.addEventListener("input",()=>{ S.names[i]=inp.value; }));
+}
+function availableCount(){ return PUZZLES.filter(z=>S.pools.has(z.pool)).length; }
+function syncManches(){
+  const max = Math.max(2, Math.min(10, availableCount()));
+  const r = $("#rngManches"); r.max = max; if(+r.value > max) r.value = max;
+  $("#outManches").textContent = r.value;
+}
+$("#teamMinus").onclick = ()=>{ if(S.nTeams>2){ S.nTeams--; renderTeamInputs(); } };
+$("#teamPlus").onclick  = ()=>{ if(S.nTeams<6){ S.nTeams++; renderTeamInputs(); } };
+$("#rngManches").oninput = e=>{ $("#outManches").textContent = e.target.value; };
+$("#btnStart").onclick = startGame;
+$("#btnRules1").onclick = ()=>openOv("#rulesOv");
+renderPools(); renderTeamInputs(); syncManches();
+
+/* ======================================================================
+   ROUE (canvas)
+   ====================================================================== */
+function drawWheel(cv, rot, time, small){
+  const dpr = window.devicePixelRatio || 1; const size = cv.clientWidth; if(!size) return;
+  const px = Math.round(size*dpr); if(cv.width!==px || cv.height!==px){ cv.width=px; cv.height=px; }
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,size,size);
+  const c = size/2, Rr = c*0.985, R = c*0.86, n = WHEEL.length, seg = Math.PI*2/n;
+  let g = ctx.createRadialGradient(c,c,R*0.9,c,c,Rr); g.addColorStop(0,"#7a4f00"); g.addColorStop(0.35,"#ffd76a"); g.addColorStop(0.7,"#c98d00"); g.addColorStop(1,"#5a3a00");
+  ctx.beginPath(); ctx.arc(c,c,Rr,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+  for(let i=0;i<n;i++){
+    const s = WHEEL[i], a0 = -Math.PI/2 + rot + i*seg;
+    ctx.beginPath(); ctx.moveTo(c,c); ctx.arc(c,c,R,a0,a0+seg); ctx.closePath();
+    if(s.t==="jp"){ const jg=ctx.createRadialGradient(c,c,R*0.2,c,c,R); jg.addColorStop(0,"#fff3b0"); jg.addColorStop(1,"#f5b700"); ctx.fillStyle=jg; }
+    else if(s.t==="ex"){ const eg=ctx.createRadialGradient(c,c,R*0.2,c,c,R); eg.addColorStop(0,"#c77dff"); eg.addColorStop(1,"#5a189a"); ctx.fillStyle=eg; }
+    else ctx.fillStyle=s.bg;
+    ctx.fill(); ctx.lineWidth=Math.max(1,size*0.004); ctx.strokeStyle="rgba(255,255,255,.55)"; ctx.stroke();
+    ctx.save(); ctx.translate(c,c); ctx.rotate(a0+seg/2); ctx.fillStyle=s.fg; ctx.textAlign="right"; ctx.textBaseline="middle";
+    if(s.t==="bk"){ ctx.font=`900 ${R*0.064}px Archivo, Arial, sans-serif`; ctx.fillText("BANQUEROUTE", R*0.94, 0); }
+    else if(s.t==="ps"){ ctx.font=`900 ${R*0.1}px Archivo, Arial, sans-serif`; ctx.fillText("PASSE", R*0.93, 0); }
+    else if(s.t==="ex"){ ctx.font=`900 ${R*0.082}px Archivo, Arial, sans-serif`; ctx.shadowColor="rgba(0,0,0,.35)"; ctx.shadowOffsetY=2; ctx.fillText("ÉCHANGE", R*0.94, 0); }
+    else if(s.t==="jp"){ ctx.font=`400 ${R*0.125}px "Bowlby One SC", Arial Black, sans-serif`; ctx.fillText("1500", R*0.93, -R*0.012); ctx.font=`900 ${R*0.042}px Archivo, Arial, sans-serif`; ctx.fillText("JACKPOT", R*0.52, 0); }
+    else { ctx.font=`400 ${R*0.125}px "Bowlby One SC", Arial Black, sans-serif`; ctx.shadowColor="rgba(0,0,0,.25)"; ctx.shadowOffsetY=2; ctx.fillText(s.label, R*0.93, 0); }
+    ctx.restore();
+  }
+  for(let i=0;i<n;i++){ const a=-Math.PI/2+rot+i*seg; const x=c+Math.cos(a)*R*0.985, y=c+Math.sin(a)*R*0.985; ctx.beginPath(); ctx.arc(x,y,size*0.011,0,Math.PI*2); ctx.fillStyle="#fff6d6"; ctx.fill(); ctx.strokeStyle="#7a4f00"; ctx.lineWidth=1; ctx.stroke(); }
+  const nb = 32, phase = Math.floor(time/280)%2;
+  for(let i=0;i<nb;i++){ const a=i/nb*Math.PI*2; const x=c+Math.cos(a)*(R+(Rr-R)*0.5), y=c+Math.sin(a)*(R+(Rr-R)*0.5); const on=(i%2===phase) || S.spinning && Math.random()>0.4;
+    ctx.beginPath(); ctx.arc(x,y,size*0.012,0,Math.PI*2); ctx.fillStyle= on ? "#fffbe6" : "#a36d00"; if(on){ ctx.shadowColor="#ffe48a"; ctx.shadowBlur=size*0.03; } ctx.fill(); ctx.shadowBlur=0; }
+  g = ctx.createRadialGradient(c-R*0.05,c-R*0.06,R*0.02,c,c,R*0.2); g.addColorStop(0,"#fff4c2"); g.addColorStop(0.5,"#ffc83d"); g.addColorStop(1,"#8a5a00");
+  ctx.beginPath(); ctx.arc(c,c,R*0.19,0,Math.PI*2); ctx.fillStyle=g; ctx.fill(); ctx.lineWidth=size*0.008; ctx.strokeStyle="#5a3a00"; ctx.stroke();
+  ctx.fillStyle="#3a2400"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.font=`400 ${R*(small?0.12:0.068)}px "Bowlby One SC", Arial Black, sans-serif`;
+  if(small){ ctx.fillText("€",c,c+R*0.01); } else { ctx.fillText("ÉCO-",c,c-R*0.045); ctx.fillText("GESTION",c,c+R*0.05); }
+}
+function loop(time){
+  if(!$("#setup").hidden){ if(!REDUCE) S.miniRot += 0.004; drawWheel($("#miniWheel"), S.miniRot, time, true); }
+  if(!$("#game").hidden) drawWheel($("#wheel"), S.rot, time, false);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function flapPointer(){
+  const el = $("#pointer"); if(REDUCE || !el.animate) return;
+  el.animate([{transform:"translateX(-50%) rotate(0deg)"},{transform:"translateX(-50%) rotate(-16deg)"},{transform:"translateX(-50%) rotate(0deg)"}],{duration:110});
+}
+function spinWheel(){
+  return new Promise(res=>{
+    const n=WHEEL.length, seg=Math.PI*2/n;
+    const idx=Math.floor(Math.random()*n), f=0.2+Math.random()*0.6;
+    const target = -(idx+f)*seg, r0=S.rot;
+    const delta = mod(target-r0, Math.PI*2);
+    const turns = REDUCE ? 1 : 4 + Math.floor(Math.random()*3);
+    const r1 = r0 + turns*Math.PI*2 + delta;
+    const dur = REDUCE ? 1200 : 5000 + Math.random()*1500;
+    const t0 = performance.now(); let lastPeg = Math.floor(r0/seg);
+    S.spinning = true; SFX.whoosh();
+    function step(t){
+      const p = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-p,4);
+      S.rot = r0 + (r1-r0)*e;
+      const peg = Math.floor(S.rot/seg); if(peg!==lastPeg){ lastPeg=peg; SFX.tick(); flapPointer(); }
+      if(p<1) requestAnimationFrame(step);
+      else { S.rot = mod(r1, Math.PI*2); S.spinning=false; res(WHEEL[idx]); }
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* ======================================================================
+   PLATEAU
+   ====================================================================== */
+function buildBoard(p){
+  const rows = wrapPhrase(p.p), top = Math.floor((ROWS-rows.length)/2), board = $("#board");
+  board.innerHTML = ""; S.tiles = [];
+  for(let r=0;r<ROWS;r++){
+    const text = rows[r-top] ?? null, start = text ? Math.floor((COLS-text.length)/2) : 0;
+    for(let col=0;col<COLS;col++){
+      const el = document.createElement("div"); el.className="tile";
+      const ch = (text && col>=start && col<start+text.length) ? text[col-start] : null;
+      if(ch && ch!==" "){
+        const sp=document.createElement("span"); sp.textContent=ch; el.appendChild(sp);
+        if(/[A-Z]/.test(ch)){ el.classList.add("hid"); S.tiles.push({el, letter:ch, shown:false}); }
+        else el.classList.add("hid","shown","punct");
+      } else {
+        el.classList.add("blank");
+        if((r===0||r===ROWS-1) && (col===0||col===COLS-1)) el.classList.add("corner");
+      }
+      board.appendChild(el);
+    }
+  }
+}
+const hiddenTiles = () => S.tiles.filter(t=>!t.shown);
+const consonantsLeft = () => hiddenTiles().some(t=>!VOWELS.has(t.letter));
+const vowelsLeft = () => hiddenTiles().some(t=>VOWELS.has(t.letter));
+async function revealLetter(L){
+  const ts = S.tiles.filter(t=>t.letter===L && !t.shown);
+  for(const t of ts){ t.el.classList.add("lit"); SFX.ding(); await sleep(430); }
+  await sleep(200);
+  for(const t of ts){ t.el.classList.remove("lit"); t.el.classList.add("shown"); t.shown=true; await sleep(130); }
+}
+async function revealAll(){
+  for(const t of hiddenTiles()){ t.el.classList.add("shown"); t.shown=true; SFX.softDing(); await sleep(55); }
+}
+
+/* ======================================================================
+   ÉQUIPES ET AFFICHAGE DES POINTS
+   ====================================================================== */
+function renderTeams(){
+  $("#teams").innerHTML = S.teams.map((t,i)=>
+    `<button type="button" class="tag" id="tag-${i}" style="--c:${t.color}" aria-label="Donner la main à ${esc(t.name)}">
+      <span class="turn">À vous</span><span class="tn">${esc(t.name)}</span>
+      <span class="pot"><small>Cagnotte<br>manche</small><b class="vm">0</b></span>
+      <span class="bank"><span>Banque</span><b class="vt">0</b></span></button>`).join("");
+  S.teams.forEach((t,i)=>{ t.dm=0; t.dt=0; $("#tag-"+i).onclick=()=>giveHand(i); });
+}
+const tweens = new WeakMap();
+function tween(el, from, to, obj, key){
+  if(from===to){ el.textContent=fmt(to); return; }
+  const id = {}; tweens.set(el, id);
+  const t0=performance.now(), d=REDUCE?1:800;
+  (function st(t){ if(tweens.get(el)!==id) return; const p=Math.min(1,(t-t0)/d); const v=Math.round(from+(to-from)*(1-Math.pow(1-p,3))); el.textContent=fmt(v); obj[key]=v; if(p<1) requestAnimationFrame(st); })(t0);
+}
+function updateTeams(bumpIdx){
+  const playing = S.teams.length && !["idle","bonus","end"].includes(S.mode);
+  $("#teams").classList.toggle("has-active", !!playing);
+  S.teams.forEach((t,i)=>{
+    const tag=$("#tag-"+i); if(!tag) return;
+    tag.classList.toggle("active", i===S.cur && !!playing);
+    tween(tag.querySelector(".vm"), t.dm, t.manche, t, "dm");
+    tween(tag.querySelector(".vt"), t.dt, t.total, t, "dt");
+    if(i===bumpIdx){ tag.classList.remove("bump"); void tag.offsetWidth; tag.classList.add("bump"); }
+  });
+  updatePotBox();
+}
+let potTeam = -1;
+function updatePotBox(){
+  const box=$("#potbox"), t=team();
+  const show = !!t && !["idle","bonus","end"].includes(S.mode);
+  box.hidden = !show; if(!show) return;
+  box.style.setProperty("--c", t.color);
+  $("#potName").textContent = t.name;
+  const el=$("#potVal");
+  if(potTeam!==S.cur){ potTeam=S.cur; S.potShown=t.manche; tweens.set(el,{}); el.textContent=fmt(t.manche); return; }
+  tween(el, S.potShown, t.manche, S, "potShown");
+}
+/* +N au-dessus de l'étiquette, flash de la cagnotte, grosse annonce sur le plateau */
+function showGain(i, amount, {burst=true, label=""}={}){
+  const tag=$("#tag-"+i); if(!tag || amount===0 && !label) return;
+  const neg = amount<0;
+  const pot=tag.querySelector(".pot"); pot.classList.remove("flash","flash-neg"); void pot.offsetWidth; pot.classList.add(neg?"flash-neg":"flash");
+  const r=tag.getBoundingClientRect();
+  const f=document.createElement("div"); f.className="floater"+(neg?" neg":""); f.textContent = amount ? signed(amount) : label;
+  f.style.left=(r.left+r.width/2)+"px"; f.style.top=(r.top-38)+"px";
+  document.body.appendChild(f); setTimeout(()=>f.remove(), 1800);
+  if(burst) bigBurst(amount ? signed(amount) : label, label && amount ? label : "", neg ? "neg" : "");
+  if(i===S.cur){ const b=$("#potbox"); b.classList.remove("pulse"); void b.offsetWidth; b.classList.add("pulse"); }
+}
+function bigBurst(text, sub="", cls=""){
+  const fr=$("#boardFrame"); fr.querySelectorAll(".burst").forEach(x=>x.remove());
+  const b=document.createElement("div"); b.className="burst "+cls;
+  b.innerHTML = esc(text) + (sub ? `<small>${esc(sub)}</small>` : "");
+  fr.appendChild(b); setTimeout(()=>b.remove(), 1900);
+}
+const team = () => S.teams[S.cur];
+
+/* ======================================================================
+   CLAVIER DE LETTRES ET BOUTONS
+   ====================================================================== */
+function renderKeyboard(){
+  $("#kbd").innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(L=>
+    `<button type="button" class="key ${VOWELS.has(L)?"v":""}" data-l="${L}" aria-label="Lettre ${L}">${L}</button>`).join("");
+  $("#kbd").querySelectorAll(".key").forEach(b=>b.onclick=()=>pickLetter(b.dataset.l));
+}
+function refreshUI(){
+  const m=S.mode, t=team();
+  $("#btnSpin").disabled = !(m==="turn" && consonantsLeft());
+  $("#btnVowel").disabled = !(m==="turn" && vowelsLeft() && t && t.manche>=VOWEL_COST);
+  $("#btnSolve").disabled = m!=="turn";
+  $("#btnSolve").classList.toggle("pulse", m==="turn" && hiddenTiles().length===0);
+  $("#btnNextTeam").disabled = !["turn","consonant","vowel"].includes(m);
+  $("#btnAbandon").disabled = !["turn","consonant","vowel"].includes(m);
+  const kb=$("#kbd"); kb.classList.toggle("mode-c", m==="consonant"); kb.classList.toggle("mode-v", m==="vowel");
+  kb.querySelectorAll(".key").forEach(b=>{
+    const L=b.dataset.l, used=S.used.has(L), v=VOWELS.has(L);
+    b.classList.toggle("used", used);
+    b.disabled = used || !((m==="consonant" && !v) || (m==="vowel" && v));
+  });
+  updateTeams();
+}
+function setMsg(html){ $("#msg").innerHTML = html; }
+function showChip(seg){
+  if(!seg){ $("#spinResult").innerHTML=""; return; }
+  const txt = seg.t==="v" ? fmt(seg.v)+" pts" : seg.t==="jp" ? "JACKPOT · 1 500 pts" : seg.label;
+  $("#spinResult").innerHTML = `<span class="chip${seg.t==="ex"?" ex":""}" style="background:${seg.bg};color:${seg.fg}">${txt}</span>`;
+}
+
+/* ======================================================================
+   DÉROULEMENT
+   ====================================================================== */
+async function startGame(){
+  if(!S.pools.size){ const e=$("#setupErr"); e.textContent="Cochez au moins un niveau."; e.hidden=false; return; }
+  $("#setupErr").hidden = true;
+  initAudio();
+  S.timer = +$("#selTimer").value;
+  S.swapMode = $("#selSwap").value;
+  S.deck = shuffle(PUZZLES.filter(z=>S.pools.has(z.pool)));
+  S.nManches = Math.min(+$("#rngManches").value, S.deck.length);
+  S.teams = Array.from({length:S.nTeams},(_,i)=>({ name:(S.names[i]||"").trim()||`Équipe ${i+1}`, color:TEAM_COLORS[i], manche:0, total:0, dm:0, dt:0, solved:0, bonusOk:0 }));
+  S.mIndex = 0;
+  $("#setup").hidden = true; $("#game").hidden = false;
+  renderTeams(); renderKeyboard(); window.scrollTo(0,0);
+  SFX.jingle();
+  startManche(true);
+}
+async function startManche(first){
+  const p = S.puzzle = S.deck[S.mIndex];
+  S.used = new Set(); S.teams.forEach(t=>t.manche=0);
+  S.cur = S.mIndex % S.teams.length; potTeam = -1;
+  buildBoard(p); showChip(null);
+  $("#catName").textContent = `${p.ch} · ${p.cat}`;
+  $("#catDip").textContent = `${POOLS[p.pool].label} · Module ${p.mod}`;
+  $("#manchePill").textContent = `Manche ${S.mIndex+1} / ${S.nManches}`;
+  S.mode = "busy"; refreshUI();
+  setMsg(`Manche ${S.mIndex+1} · <b>${esc(team().name)}</b>, vous commencez !`);
+  if(!first) SFX.jingle();
+  await sleep(1300);
+  S.mode = "turn"; turnMsg(); refreshUI();
+}
+function turnMsg(){
+  const t=team();
+  if(hiddenTiles().length===0){ setMsg(`Toutes les lettres sont visibles : <b>${esc(t.name)}</b>, lisez la phrase !`); return; }
+  if(!consonantsLeft()) { setMsg(`Plus de consonne cachée. <b>${esc(t.name)}</b> : achetez une voyelle ou proposez la solution.`); return; }
+  setMsg(`<b>${esc(t.name)}</b> : tournez la roue, achetez une voyelle ou proposez la solution.`);
+}
+function nextTeam(){
+  S.cur = (S.cur+1) % S.teams.length; S.mode="turn"; showChip(null); turnMsg(); refreshUI();
+}
+function giveHand(i){
+  if(!["turn","consonant","vowel"].includes(S.mode) || i===S.cur) return;
+  S.cur=i; S.mode="turn"; showChip(null); turnMsg(); refreshUI();
+}
+
+async function doSpin(){
+  if(S.mode!=="turn" || !consonantsLeft()) return;
+  initAudio(); S.mode="busy"; refreshUI(); showChip(null);
+  setMsg(`La roue tourne…`);
+  const seg = await spinWheel(); showChip(seg);
+  const t = team();
+  if(seg.t==="bk"){
+    SFX.bankrupt(); const lost=t.manche; t.manche=0; updateTeams(S.cur);
+    if(lost>0) showGain(S.cur, -lost, {burst:false});
+    bigBurst("BANQUEROUTE", lost>0 ? `${signed(-lost)} points` : "", "neg");
+    setMsg(`<b>Banqueroute !</b> ${esc(t.name)} perd sa cagnotte de la manche${lost>0?` (${fmt(lost)} points)`:""}.`);
+    await sleep(2200); nextTeam(); return;
+  }
+  if(seg.t==="ps"){
+    SFX.buzz(); setMsg(`<b>Passe !</b> La main passe à l'équipe suivante.`);
+    await sleep(1400); nextTeam(); return;
+  }
+  if(seg.t==="ex"){ await sleep(500); openSwap(); return; }
+  S.wheelVal = seg.v; S.mode="consonant"; refreshUI();
+  if(seg.t==="jp"){ SFX.fanfare(); setMsg(`<b>JACKPOT !</b> 1 500 points par consonne trouvée. Choisissez une consonne.`); }
+  else { setMsg(`<b>${fmt(seg.v)} points</b> par consonne trouvée. Choisissez une consonne.`); }
+}
+function doBuyVowel(){
+  const t=team(); if(S.mode!=="turn" || t.manche<VOWEL_COST || !vowelsLeft()) return;
+  t.manche -= VOWEL_COST; S.mode="vowel"; showChip(null); refreshUI();
+  showGain(S.cur, -VOWEL_COST, {burst:false});
+  setMsg(`<b>${esc(t.name)}</b> achète une voyelle (−250). Choisissez A, E, I, O, U ou Y.`);
+}
+async function pickLetter(L){
+  if(S.used.has(L)) return;
+  const v = VOWELS.has(L);
+  if(!((S.mode==="consonant" && !v) || (S.mode==="vowel" && v))) return;
+  const t=team(), wasVowel = S.mode==="vowel";
+  S.used.add(L); S.mode="busy"; refreshUI();
+  const n = S.tiles.filter(x=>x.letter===L && !x.shown).length;
+  if(n===0){
+    SFX.buzz(); setMsg(`Pas de <b>${L}</b> dans la phrase. La main passe.`);
+    await sleep(1400); nextTeam(); return;
+  }
+  const gain = wasVowel ? 0 : n*S.wheelVal;
+  setMsg(`Il y a <b>${n} ${L}</b> !${wasVowel?"":` <b>+${fmt(gain)} points</b> dans la cagnotte`}`);
+  await revealLetter(L);
+  if(!wasVowel){ t.manche += gain; updateTeams(S.cur); SFX.coins(); showGain(S.cur, gain, {label: `${n} × ${fmt(S.wheelVal)}`}); }
+  S.mode="turn"; showChip(null); turnMsg(); refreshUI();
+}
+
+/* --- case Échange --- */
+function openSwap(){
+  const t=team(), me=S.cur, take = S.swapMode==="take";
+  S.mode="swap"; refreshUI(); SFX.swap();
+  setMsg(`<b>Échange !</b> ${esc(t.name)} choisit…`);
+  $("#swapTeam").innerHTML = `<span class="team-chip" style="background:${t.color}">${esc(t.name)}</span>`;
+  $("#swapSub").textContent = take
+    ? "Votre équipe peut prendre la cagnotte de la manche d'une autre équipe : elle s'ajoute à la vôtre et l'autre équipe la perd. Vous pouvez aussi ne rien prendre. Vous gardez ensuite la main."
+    : "Votre équipe peut échanger sa cagnotte de la manche avec celle d'une autre équipe. Vous pouvez aussi refuser l'échange. Vous gardez ensuite la main.";
+  $("#swapMine").innerHTML = `<span>Votre cagnotte actuelle</span><b>${fmt(t.manche)} pts</b>`;
+  $("#swapNone").textContent = take ? "Ne rien prendre" : "Refuser l'échange";
+  const others = S.teams.map((x,i)=>({x,i})).filter(o=>o.i!==me);
+  $("#swapGrid").innerHTML = others.map(({x,i})=>{
+    const dis = take && x.manche<=0;
+    const hint = take ? (dis ? "Rien à prendre" : `Vous gagnez +${fmt(x.manche)}`) : `Vous passez à ${fmt(x.manche)} pts`;
+    return `<button type="button" class="swap-team" data-i="${i}" style="--c:${x.color}" ${dis?"disabled":""}>
+      <span class="sn">${esc(x.name)}</span><span class="sv">${fmt(x.manche)} pts</span><span class="sh">${hint}</span></button>`;
+  }).join("");
+  $("#swapGrid").querySelectorAll(".swap-team").forEach(b=>b.onclick=()=>doSwap(+b.dataset.i));
+  openOv("#swapOv");
+}
+function doSwap(j){
+  if(S.mode!=="swap") return;
+  closeOv("#swapOv");
+  const a=team(), b=S.teams[j], i=S.cur;
+  const a0=a.manche, b0=b.manche;
+  if(S.swapMode==="take"){ a.manche = a0+b0; b.manche = 0; }
+  else { a.manche = b0; b.manche = a0; }
+  const da=a.manche-a0, db=b.manche-b0;
+  S.mode="turn"; showChip(null); refreshUI(); updateTeams(i);
+  SFX.swap(); if(da>0) setTimeout(()=>SFX.coins(), 350);
+  if(db) showGain(j, db, {burst:false});
+  if(da) showGain(i, da, {label: S.swapMode==="take" ? `pris à ${b.name}` : `échange avec ${b.name}`});
+  else bigBurst("ÉCHANGE", `avec ${b.name}`, "swap");
+  const what = S.swapMode==="take"
+    ? `<b>${esc(a.name)}</b> prend la cagnotte de ${esc(b.name)} (${signed(da)} points).`
+    : `<b>${esc(a.name)}</b> échange sa cagnotte avec ${esc(b.name)} : ${fmt(a0)} ⇄ ${fmt(b0)}.`;
+  setMsg(`${what} ${esc(a.name)} garde la main.`);
+}
+$("#swapNone").onclick = ()=>{
+  if(S.mode!=="swap") return;
+  closeOv("#swapOv"); const t=team();
+  S.mode="turn"; showChip(null); refreshUI();
+  setMsg(`<b>${esc(t.name)}</b> ne prend rien et garde la main : tournez, achetez une voyelle ou proposez la solution.`);
+};
+
+/* --- proposer la solution --- */
+function openSolve(){
+  if(S.mode!=="turn") return;
+  const t=team(); S.mode="solve"; refreshUI();
+  $("#solveTeam").innerHTML = `<span class="team-chip" style="background:${t.color}">${esc(t.name)}</span>`;
+  $("#solveInput").value=""; $("#solveRes").textContent="";
+  openOv("#solveOv"); setTimeout(()=>$("#solveInput").focus(), 50);
+}
+$("#solveCheck").onclick = ()=>{
+  const val=$("#solveInput").value.trim(); const res=$("#solveRes");
+  if(!val){ res.textContent="Tapez la phrase proposée, ou utilisez les boutons Réponse juste / Réponse fausse."; res.style.color="var(--muted)"; return; }
+  if(lettersOnly(val)===lettersOnly(S.puzzle.p)){ closeOv("#solveOv"); winManche(); }
+  else { closeOv("#solveOv"); wrongSolve(); }
+};
+$("#solveInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); $("#solveCheck").click(); } });
+$("#solveYes").onclick = ()=>{ closeOv("#solveOv"); winManche(); };
+$("#solveNo").onclick  = ()=>{ closeOv("#solveOv"); wrongSolve(); };
+$("#solveCancel").onclick = ()=>{ closeOv("#solveOv"); S.mode="turn"; refreshUI(); };
+async function wrongSolve(){
+  S.mode="busy"; refreshUI(); SFX.buzz();
+  setMsg(`Ce n'est pas la bonne phrase. La main passe.`);
+  await sleep(1400); nextTeam();
+}
+async function winManche(){
+  const t=team(), i=S.cur; S.mode="busy"; refreshUI(); showChip(null);
+  await revealAll();
+  const gain = t.manche + SOLVE_PRIME;
+  t.total += gain; t.solved++; S.teams.forEach(x=>x.manche=0);
+  updateTeams(i);
+  showGain(i, gain, {label:"en banque"});
+  SFX.fanfare(); setTimeout(()=>SFX.applause(3.8), 350); confetti(REDUCE?40:140, 0);
+  setMsg(`Bravo <b>${esc(t.name)}</b> ! <b>+${fmt(gain)} points</b> en banque (prime de ${SOLVE_PRIME} points comprise).`);
+  await sleep(2600);
+  openBonus(i);
+}
+async function abandonManche(){
+  S.mode="busy"; refreshUI(); showChip(null);
+  await revealAll(); S.teams.forEach(x=>x.manche=0); updateTeams();
+  setMsg(`Personne n'a trouvé. Voici la phrase.`);
+  await sleep(1500);
+  openBonus(null);
+}
+const abBtn = $("#btnAbandon"); let abTimer=null;
+abBtn.onclick = ()=>{
+  if(abBtn.classList.contains("armed")){ clearTimeout(abTimer); abBtn.classList.remove("armed"); abBtn.textContent="Personne ne trouve : révéler la phrase"; abandonManche(); return; }
+  abBtn.classList.add("armed"); abBtn.textContent="Confirmer : révéler sans points";
+  abTimer=setTimeout(()=>{ abBtn.classList.remove("armed"); abBtn.textContent="Personne ne trouve : révéler la phrase"; }, 3500);
+};
+
+/* --- question de cours --- */
+let bonusInt=null;
+function openBonus(ti){
+  const p=S.puzzle; S.mode="bonus"; refreshUI();
+  const forTeam = ti!==null, t = forTeam ? S.teams[ti] : null;
+  $("#bonusTeam").innerHTML = forTeam ? `<span class="team-chip" style="background:${t.color}">${esc(t.name)} · +${BONUS_PTS} pts en jeu</span>` : `<span class="team-chip" style="background:var(--muted)">Question pour toute la classe · sans points</span>`;
+  $("#bonusPhrase").textContent = p.p;
+  $("#bonusQ").textContent = p.q;
+  $("#ticketBox").innerHTML=""; $("#bonusNext").hidden=true;
+  const last = S.mIndex+1 >= S.nManches;
+  $("#btnNextManche").textContent = last ? "Voir le classement final" : "Manche suivante";
+  const opts = shuffle(p.c.map((txt,k)=>({txt, ok:k===0})));
+  $("#choices").innerHTML = opts.map((o,k)=>`<button type="button" class="choice" data-ok="${o.ok?1:0}"><span class="k">${"ABCD"[k]}</span><span>${esc(o.txt)}</span></button>`).join("");
+  const btns=[...$("#choices").querySelectorAll(".choice")];
+  btns.forEach(b=>b.onclick=()=>answerBonus(b, ti, btns));
+  clearInterval(bonusInt);
+  const box=$("#timerBox");
+  if(S.timer>0 && forTeam){
+    box.hidden=false; const end=performance.now()+S.timer*1000; let lastSec=S.timer;
+    $("#timerTxt").textContent=S.timer+" s"; $("#timerBar").style.transform="scaleX(1)";
+    bonusInt=setInterval(()=>{
+      const left=Math.max(0,end-performance.now()), sec=Math.ceil(left/1000);
+      $("#timerBar").style.transform=`scaleX(${left/(S.timer*1000)})`; $("#timerTxt").textContent=sec+" s";
+      if(sec!==lastSec){ lastSec=sec; if(sec<=10) SFX.timer(); }
+      if(left<=0){ clearInterval(bonusInt); answerBonus(null, ti, btns); }
+    },100);
+  } else box.hidden=true;
+  openOv("#bonusOv");
+}
+function answerBonus(btn, ti, btns){
+  if(btns.some(b=>b.disabled)) return;
+  clearInterval(bonusInt);
+  btns.forEach(b=>{ b.disabled=true; if(b.dataset.ok==="1") b.classList.add("right"); });
+  const p=S.puzzle, ok = btn && btn.dataset.ok==="1", forTeam = ti!==null;
+  if(btn && !ok) btn.classList.add("wrong");
+  const correct = p.c[0];
+  if(forTeam && ok){ S.teams[ti].total += BONUS_PTS; S.teams[ti].bonusOk++; updateTeams(ti); SFX.ding(); SFX.applause(2.6); confetti(REDUCE?20:70,0); }
+  else if(forTeam){ SFX.buzz(); }
+  else { SFX.ding(); }
+  const line = forTeam ? `<div class="l tot"><span>${ok?"BONNE RÉPONSE":"RÉPONSE MANQUÉE"}</span><span>${ok?"+"+BONUS_PTS:"0"} PTS</span></div>` : `<div class="l tot"><span>RÉPONSE</span><span>${esc(correct)}</span></div>`;
+  $("#ticketBox").innerHTML = `<div class="ticket">
+    <h3>PROGRAMME</h3>
+    <div class="l"><span>Éco-gestion · ${esc(POOLS[p.pool].label)}</span><span>Manche ${S.mIndex+1}</span></div>
+    <div class="dash"></div>
+    <p><b>${esc(p.bloc)}</b></p>
+    <p><i>${esc(p.question)}</i></p>
+    <p><b>Chapitre ${p.ch} :</b> ${esc(p.cat)}</p>
+    ${forTeam && !ok ? `<p><b>Bonne réponse :</b> ${esc(correct)}</p>` : ""}
+    <p>${esc(p.ex)}</p>
+    <div class="dash"></div>${line}</div>`;
+  $("#bonusNext").hidden=false;
+}
+$("#btnNextManche").onclick = ()=>{
+  closeOv("#bonusOv");
+  S.mIndex++;
+  if(S.mIndex >= S.nManches) showFinal(); else startManche(false);
+};
+
+/* --- fin de partie --- */
+$("#tEnd").onclick = ()=>{ if(S.mode!=="end") openOv("#endOv"); };
+$("#endNo").onclick = ()=>closeOv("#endOv");
+$("#endYes").onclick = ()=>{ closeOv("#endOv"); closeOv("#bonusOv"); closeOv("#solveOv"); closeOv("#swapOv"); clearInterval(bonusInt); S.teams.forEach(t=>t.manche=0); showFinal(); };
+async function showFinal(){
+  S.mode="end"; refreshUI(); setMsg("Partie terminée !");
+  const rank = S.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.total-a.total);
+  const top = rank[0].total, winners = rank.filter(r=>r.total===top);
+  const body=$("#finalBody");
+  body.innerHTML = `<p class="suspense">Roulement de tambour…</p>`;
+  openOv("#finalOv");
+  await sleep(600);
+  SFX.drumroll(2.6); await sleep(2700); SFX.crash();
+  const tie = winners.length>1;
+  const order = [rank[1], rank[0], rank[2]].filter(Boolean);
+  const heights = {0:"190px",1:"130px",2:"90px"};
+  body.innerHTML = `
+    <p class="winner" style="color:${winners[0].color}">${tie ? "Égalité !" : esc(winners[0].name)}</p>
+    <p class="winner-pts">${tie ? winners.map(w=>esc(w.name)).join(" · ")+" — " : ""}${fmt(top)} points</p>
+    <div class="podium">${order.map(r=>{ const pos=rank.indexOf(r); return `<div class="pod"><span class="pname">${esc(r.name)}</span><div class="block" style="height:${heights[pos]};background:${r.color}">${pos+1}</div><span class="ppts">${fmt(r.total)} pts</span></div>`; }).join("")}</div>
+    <ol class="ranking">${rank.map((r,k)=>`<li><span class="r">${k+1}</span><span>${esc(r.name)}<small>${r.solved} phrase(s) trouvée(s) · ${r.bonusOk} question(s) de cours réussie(s)</small></span><span class="s">${fmt(r.total)} pts</span></li>`).join("")}</ol>
+    <div class="row-btns"><button class="b gold" type="button" id="btnReplay">Rejouer avec les mêmes équipes</button><button class="b line" type="button" id="btnNewGame">Nouvelle configuration</button></div>`;
+  SFX.fanfare(); setTimeout(()=>SFX.applause(5.5), 300); confetti(REDUCE?60:220, REDUCE?0:5000);
+  $("#btnReplay").onclick = ()=>{ closeOv("#finalOv"); stopConfetti(); replay(); };
+  $("#btnNewGame").onclick = ()=>{ closeOv("#finalOv"); stopConfetti(); $("#game").hidden=true; $("#setup").hidden=false; S.mode="idle"; window.scrollTo(0,0); };
+}
+function replay(){
+  S.deck = shuffle(PUZZLES.filter(z=>S.pools.has(z.pool)));
+  S.nManches = Math.min(S.nManches, S.deck.length);
+  S.teams.forEach(t=>{ t.manche=0; t.total=0; t.solved=0; t.bonusOk=0; });
+  S.mIndex=0; renderTeams(); SFX.jingle(); startManche(false);
+}
+
+/* ======================================================================
+   SUPERPOSITIONS, OUTILS, CLAVIER PHYSIQUE
+   ====================================================================== */
+function openOv(sel){ $(sel).hidden=false; }
+function closeOv(sel){ $(sel).hidden=true; }
+$("#rulesClose").onclick = ()=>closeOv("#rulesOv");
+$("#tRules").onclick = ()=>openOv("#rulesOv");
+$("#tSound").onclick = e=>{ S.sound=!S.sound; e.currentTarget.setAttribute("aria-pressed", S.sound); if(S.sound) initAudio(); };
+$("#tFull").onclick = ()=>{ try{ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(()=>{}); }catch(e){} };
+$("#btnSpin").onclick = doSpin;
+$("#btnVowel").onclick = doBuyVowel;
+$("#btnSolve").onclick = openSolve;
+$("#btnNextTeam").onclick = ()=>{ if(["turn","consonant","vowel"].includes(S.mode)) nextTeam(); };
+document.addEventListener("keydown", e=>{
+  if($("#game").hidden) return;
+  const tag = (e.target.tagName||"").toLowerCase();
+  if(tag==="input" || tag==="select" || tag==="textarea") return;
+  if(!$("#rulesOv").hidden && e.key==="Escape"){ closeOv("#rulesOv"); return; }
+  if(!$("#solveOv").hidden || !$("#bonusOv").hidden || !$("#finalOv").hidden || !$("#endOv").hidden || !$("#swapOv").hidden || !$("#rulesOv").hidden) return;
+  if(e.code==="Space"){ e.preventDefault(); doSpin(); return; }
+  const L = norm(e.key||""); if(/^[A-Z]$/.test(L)) pickLetter(L);
+});
+
+/* ======================================================================
+   CONFETTIS
+   ====================================================================== */
+const CF = { parts:[], until:0, raf:0 };
+function confetti(n, ms){
+  const W=innerWidth;
+  const spawn=k=>{ for(let i=0;i<k;i++) CF.parts.push({ x:Math.random()*W, y:-20-Math.random()*innerHeight*0.3, vx:(Math.random()-.5)*3, vy:2+Math.random()*3.5, r:Math.random()*Math.PI, vr:(Math.random()-.5)*0.25, w:6+Math.random()*7, h:8+Math.random()*10, c:[...TEAM_COLORS,"#ffc83d","#ffffff"][Math.floor(Math.random()*8)] }); };
+  spawn(n); CF.until = performance.now()+ms; CF.spawn=spawn;
+  if(!CF.raf) CF.raf=requestAnimationFrame(stepConfetti);
+}
+function stepConfetti(t){
+  const cv=$("#confetti"), dpr=devicePixelRatio||1, W=innerWidth, H=innerHeight;
+  if(cv.width!==Math.round(W*dpr) || cv.height!==Math.round(H*dpr)){ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); }
+  const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  if(t<CF.until) CF.spawn(3);
+  CF.parts = CF.parts.filter(p=>p.y<H+30);
+  for(const p of CF.parts){ p.x+=p.vx+Math.sin(p.y/40)*0.6; p.y+=p.vy; p.r+=p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.r*1.3))); ctx.restore(); }
+  if(CF.parts.length || t<CF.until) CF.raf=requestAnimationFrame(stepConfetti);
+  else { CF.raf=0; ctx.clearRect(0,0,W,H); }
+}
+function stopConfetti(){ CF.until=0; CF.parts=[]; }
+</script>
+
+</body>
+</html>
